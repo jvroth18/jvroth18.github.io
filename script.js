@@ -1007,6 +1007,23 @@ setInterval(fetchWeather, 15 * 60 * 1000);
 window.addEventListener("resize", () => { sizeWx(); buildSkyBits(); });
 if (prefersReduced()) drawWx(); else wxLoop();
 
+/* on phones the street is swipeable — start it centered, and make
+   the hint line a big friendly way into the index */
+const skylineEl = document.getElementById("skyline");
+function centerSkyline() {
+  if (skylineEl.scrollWidth > skylineEl.clientWidth + 4) {
+    skylineEl.scrollLeft = (skylineEl.scrollWidth - skylineEl.clientWidth) / 2;
+  }
+}
+setTimeout(centerSkyline, 300);
+window.addEventListener("orientationchange", () => setTimeout(centerSkyline, 400));
+
+const hintLine = document.getElementById("hint-line");
+hintLine.addEventListener("click", () => palShow());
+hintLine.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); palShow(); }
+});
+
 const sbClock = document.getElementById("sb-clock");
 function tickClock() {
   sbClock.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });

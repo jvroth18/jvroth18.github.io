@@ -335,8 +335,18 @@ kbd {
 /* ============ Responsive ============ */
 @media (max-width: 760px) {
   .masthead { top: 1rem; }
-  .standfirst { max-width: 34ch; }
-  .skyline { max-height: 42vh; }
+  .dateline { font-size: .56rem; letter-spacing: .1em; }
+  .standfirst { max-width: 34ch; font-size: 1rem; }
+  .mast-rule { margin: .5rem auto .5rem; }
+  /* the street becomes swipeable: full-size rooftops, pan to explore */
+  .skyline {
+    max-height: 42vh;
+    overflow-x: auto; overflow-y: hidden;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .skyline::-webkit-scrollbar { display: none; }
   .clipping { max-height: 70vh; }
   .clip-body { padding: 1.2rem 1.2rem 1.4rem; }
   .log-item { grid-template-columns: 1fr; gap: .3rem; }
@@ -423,7 +433,13 @@ html[data-edition="night"] .masthead-name { color: var(--sky-text); }
   font-size: clamp(1.05rem, 1.7vw, 1.24rem);
 }
 .standfirst a { color: var(--sky-accent); }
-.skyline-hint { color: var(--sky-text-faint); font-size: .7rem; font-weight: 500; }
+.skyline-hint { color: var(--sky-text-faint); font-size: .7rem; font-weight: 500; pointer-events: auto; cursor: pointer; }
+.skyline-hint:hover { color: var(--sky-accent); }
+.hint-mobile { display: none; }
+@media (pointer: coarse) {
+  .hint-desktop { display: none; }
+  .hint-mobile { display: inline; }
+}
 html[data-edition="night"] .skyline-hint kbd {
   background: transparent;
   color: var(--sky-text-soft);
