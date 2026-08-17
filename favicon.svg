@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The Evening Post — biplane over the rooftops -->
+  <rect width="64" height="64" rx="13" fill="#f6ecda"/>
+
+  <!-- skyline -->
+  <rect x="5"  y="45" width="11" height="13" fill="#16130f"/>
+  <rect x="19" y="39" width="13" height="19" fill="#16130f"/>
+  <rect x="35" y="47" width="10" height="11" fill="#16130f"/>
+  <rect x="48" y="42" width="12" height="16" fill="#16130f"/>
+  <rect x="0"  y="55" width="64" height="9" fill="#16130f"/>
+
+  <!-- lit windows -->
+  <rect x="22" y="43" width="3" height="3.6" fill="#f2b558"/>
+  <rect x="27.5" y="43" width="3" height="3.6" fill="#f2b558"/>
+  <rect x="22" y="49" width="3" height="3.6" fill="#f2b558"/>
+  <rect x="51" y="45" width="3" height="3.6" fill="#f2b558"/>
+  <rect x="8"  y="48" width="3" height="3.6" fill="#f2b558"/>
+
+  <!-- biplane, nose right -->
+  <g>
+    <path d="M 14.5 23.5 L 14.5 13.5 L 21.5 23.5 Z" fill="#c05621"/>
+    <path d="M 14.5 22 L 35 21.4 Q 43.5 21.4 43.5 24.9 Q 43.5 28.4 35 28.2 L 14.5 27.6 Q 13.2 24.8 14.5 22 Z" fill="#c05621"/>
+    <rect x="23.5" y="13" width="17.5" height="3" rx="1.5" fill="#16130f"/>
+    <rect x="23.5" y="29.4" width="17.5" height="3" rx="1.5" fill="#16130f"/>
+    <rect x="26.9" y="15.6" width="1.1" height="14.2" fill="#16130f"/>
+    <rect x="36.4" y="15.6" width="1.1" height="14.2" fill="#16130f"/>
+    <rect x="45.2" y="17.6" width="1.8" height="14.6" rx="0.9" fill="#16130f" opacity=".45"/>
+    <circle cx="44.2" cy="25" r="1.7" fill="#16130f"/>
+  </g>
+</svg>
