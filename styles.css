@@ -37,8 +37,6 @@ html[data-edition="evening"], html[data-edition="morning"] {
   --lamp: rgba(255, 196, 110, .55);
   --window-glow: rgba(255, 205, 130, .35);
 }
-html[data-edition="night"] .skyline-hint { color: rgba(233, 228, 218, .7); }
-html[data-edition="night"] .skyline-hint kbd { background: transparent; color: rgba(233, 228, 218, .8); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -348,4 +346,94 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   .reveal { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   LEGIBILITY OVER THE SKY (winner of the three-way evaluation)
+   Sky-duty ink + atmospheric paper halo, retuned per edition.
+   ============================================================ */
+
+:root {
+  --sky-text: var(--ink);
+  --sky-text-soft: var(--ink-soft);
+  --sky-text-faint: #6b645a;
+  --sky-accent: var(--accent);
+  --halo-core: rgba(247, 243, 236, .9);
+  --halo-mid:  rgba(247, 243, 236, .5);
+  --halo-wide: rgba(247, 243, 236, .25);
+  --clearing:  rgba(247, 243, 236, .3);
+}
+
+/* warm mid-tone skies: promote soft ink toward full ink */
+html[data-edition="morning"],
+html[data-edition="evening"] {
+  --sky-text-soft: #2b2620;
+  --sky-text-faint: #3f3930;
+  --halo-core: rgba(249, 242, 232, .95);
+  --halo-mid:  rgba(249, 242, 232, .6);
+  --halo-wide: rgba(249, 242, 232, .32);
+  --clearing:  rgba(249, 242, 232, .4);
+}
+
+/* night: ink flips to bone; the halo flips to indigo */
+html[data-edition="night"] {
+  --sky-text: #efe9df;
+  --sky-text-soft: #e4ddcf;
+  --sky-text-faint: #c7bfae;
+  --sky-accent: #e08744;
+  --halo-core: rgba(12, 15, 32, .85);
+  --halo-mid:  rgba(12, 15, 32, .55);
+  --halo-wide: rgba(12, 15, 32, .3);
+  --clearing:  rgba(12, 15, 32, .45);
+}
+
+/* a barely-there clearing in the sky behind the masthead */
+.masthead::before {
+  content: "";
+  position: absolute;
+  inset: -22% -4% -14%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 58% 72% at 50% 44%,
+              var(--clearing) 0%, transparent 70%);
+}
+
+/* atmospheric halo: stacked tight shadows, never one big blur */
+.dateline, .standfirst, .skyline-hint {
+  text-shadow:
+    0 0 1px var(--halo-core),
+    0 0 2px var(--halo-core),
+    0 0 6px var(--halo-mid),
+    0 0 18px var(--halo-wide);
+}
+.masthead-name {
+  text-shadow: 0 0 1px var(--halo-core), 0 0 2px var(--halo-core), 0 0 6px var(--halo-mid);
+}
+html[data-edition="night"] .masthead-name { color: var(--sky-text); }
+
+/* edition-aware ink, eased so edition flips fade instead of snapping */
+.masthead-name, .dateline, .standfirst, .skyline-hint {
+  transition: color 1.2s var(--ease), text-shadow 1.2s var(--ease);
+}
+.dateline { color: var(--sky-text-soft); }
+.standfirst {
+  color: var(--sky-text-soft);
+  font-style: normal;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 1.7vw, 1.24rem);
+}
+.standfirst a { color: var(--sky-accent); }
+.skyline-hint { color: var(--sky-text-faint); font-size: .7rem; font-weight: 500; }
+html[data-edition="night"] .skyline-hint kbd {
+  background: transparent;
+  color: var(--sky-text-soft);
+  border-color: rgba(239, 233, 223, .5);
+}
+
+/* billboard sub-labels: bigger and bolder; tracking pays for the size */
+.board-sub {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  fill: #3f3a33;
 }
