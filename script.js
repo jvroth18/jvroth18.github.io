@@ -12,7 +12,6 @@ const SOCIALS = {
   github:   "https://github.com/jvroth18",
   linkedin: "https://www.linkedin.com/in/jordan-rothstein",
   x:        "https://x.com/jordanrothstein",                 // TODO: confirm handle
-  substack: "https://jordanrothstein.substack.com",          // TODO: confirm handle
   talky:    "https://www.gettalky.ai",
 };
 
@@ -63,8 +62,10 @@ const PROJECTS = [
   },
 ];
 
+/* Long-form dispatches. `url` is the canonical LinkedIn post;
+   `x` is the optional X cross-post. Newest first. */
 const POSTS = [
-  // { date: "2026-08-20", title: "…", excerpt: "…", url: "…", linkedin: "…", x: "…" },
+  // { date: "2026-08-20", title: "…", excerpt: "…", url: "<linkedin post url>", x: "<x post url>" },
 ];
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
@@ -117,16 +118,16 @@ function clipHtml(kind) {
             <span class="log-date">${p.date}</span>
             <span><a class="log-title" href="${p.url}" target="_blank" rel="noopener">${p.title}</a>
               <span class="log-excerpt">${p.excerpt ?? ""}</span></span>
-            <span class="log-chips">${chip("substack", p.url)}${chip("linkedin", p.linkedin)}${chip("x", p.x)}</span>
+            <span class="log-chips">${chip("linkedin", p.url)}${chip("x", p.x)}</span>
           </li>`).join("")
       : `<li class="log-placeholder">the first dispatch is at the printer —
-           <a href="${SOCIALS.substack}" target="_blank" rel="noopener">subscribe</a> to catch it.</li>`;
+           <a href="${SOCIALS.linkedin}" target="_blank" rel="noopener">follow on LinkedIn</a> to catch it.</li>`;
     return `
       <p class="clip-eyebrow">dispatches · from the water tower</p>
-      <h2 class="clip-title" id="clip-title">Long-form, syndicated everywhere</h2>
-      <p class="clip-desc">Essays on agents, operations, and building things that hold up — published on Substack, syndicated to LinkedIn &amp; X.</p>
+      <h2 class="clip-title" id="clip-title">Long-form, where you already read</h2>
+      <p class="clip-desc">Essays on agents, operations, and building things that hold up — published on LinkedIn, syndicated to X.</p>
       <ol class="log-list">${items}</ol>
-      <div class="subscribe-row"><a class="btn-solid" href="${SOCIALS.substack}" target="_blank" rel="noopener">subscribe ↗</a></div>`;
+      <div class="subscribe-row"><a class="btn-solid" href="${SOCIALS.linkedin}" target="_blank" rel="noopener">follow on linkedin ↗</a></div>`;
   }
   if (kind === "contact") {
     const rows = [
@@ -134,7 +135,6 @@ function clipHtml(kind) {
       ["github", "jvroth18", SOCIALS.github],
       ["linkedin", "/in/jordan-rothstein", SOCIALS.linkedin],
       ["x", "@jordanrothstein", SOCIALS.x],
-      ["substack", "jordanrothstein", SOCIALS.substack],
       ["work", "gettalky.ai", SOCIALS.talky],
     ];
     return `
@@ -173,13 +173,12 @@ const COMMANDS = [
   { id: "talky", glyph: "§", label: "Talky Voice AI", desc: "the AI front desk", kw: "project voice", run: () => openClip("project-1") },
   { id: "momentum", glyph: "§", label: "Momentum Surface", desc: "path-signature quant research", kw: "project quant", run: () => openClip("project-2") },
   { id: "tracker", glyph: "§", label: "tracker", desc: "open-source CLI", kw: "project oss", run: () => openClip("project-3") },
-  { id: "writing", glyph: "✎", label: "Dispatches", desc: "essays from the water tower", kw: "blog substack", run: () => openClip("writing") },
+  { id: "writing", glyph: "✎", label: "Dispatches", desc: "essays from the water tower", kw: "blog essays writing", run: () => openClip("writing") },
   { id: "contact", glyph: "@", label: "The Post", desc: "write to the editor", kw: "email correspondence", run: () => openClip("contact") },
   { id: "fly", glyph: "✈", label: "Fly the Biplane", desc: "arrows steer · ↑↓ throttle · esc lands", kw: "plane game", run: () => takeControls() },
   { id: "weather", glyph: "☁", label: "Sky Report", desc: "live from astoria, n.y.", kw: "moon sun forecast", run: () => weatherReport() },
   { id: "github", glyph: "↗", label: "GitHub", desc: "github.com/jvroth18", kw: "code", run: () => window.open(SOCIALS.github, "_blank", "noopener") },
   { id: "linkedin", glyph: "↗", label: "LinkedIn", desc: "/in/jordan-rothstein", kw: "profile", run: () => window.open(SOCIALS.linkedin, "_blank", "noopener") },
-  { id: "substack", glyph: "↗", label: "Substack", desc: "subscribe", kw: "newsletter", run: () => window.open(SOCIALS.substack, "_blank", "noopener") },
 ];
 
 const palLayer = document.getElementById("palette-layer");
