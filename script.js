@@ -666,11 +666,17 @@ async function fetchWeather() {
 function weatherReport() {
   if (!WX.ready || WX.temp == null) { toast("the sky desk is warming up — try again in a moment.", "sky report"); return; }
   const fmt = (d) => d ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "—";
-  const p = moonPhase(new Date());
+  const now = new Date();
+  const p = moonPhase(now);
+  const { rise, set } = moonRiseSet(now);
+  const up = moonHorizontal(now).altitude > 0;
+  const moonLine = up
+    ? `moon up now · sets ${fmt(set)}`
+    : `moonrise ${fmt(rise)}`;
   toast(
     `astoria, n.y. — ${WX.temp}°F · ${WX.desc} · clouds ${WX.cover}%\n` +
     `sunrise ${fmt(WX.sunrise)} · sunset ${fmt(WX.sunset)}\n` +
-    `moon ${moonPhaseName(p)} · ${Math.round(moonIllum(p) * 100)}% lit`,
+    `moon ${moonPhaseName(p)} · ${Math.round(moonIllum(p) * 100)}% lit · ${moonLine}`,
     "sky report"
   );
 }
@@ -774,6 +780,66 @@ function moonPhaseName(p) {
   return names[Math.round(p * 8) % 8];
 }
 
+/* ---- true lunar position: low-precision ephemeris (Meeus-style,
+   the same math SunCalc uses). Gives the moon's real altitude and
+   azimuth over Astoria, so it only appears when it's actually up,
+   where it actually is. ---- */
+
+const RAD = Math.PI / 180;
+const OBLIQUITY = RAD * 23.4397;
+
+function toDays(date) {
+  return date.valueOf() / 86400000 - 0.5 + 2440588 - 2451545;   // days since J2000
+}
+function eclRightAscension(l, b) {
+  return Math.atan2(Math.sin(l) * Math.cos(OBLIQUITY) - Math.tan(b) * Math.sin(OBLIQUITY), Math.cos(l));
+}
+function eclDeclination(l, b) {
+  return Math.asin(Math.sin(b) * Math.cos(OBLIQUITY) + Math.cos(b) * Math.sin(OBLIQUITY) * Math.sin(l));
+}
+function moonEcliptic(d) {
+  const L = RAD * (218.316 + 13.176396 * d);   // mean longitude
+  const M = RAD * (134.963 + 13.064993 * d);   // mean anomaly
+  const F = RAD * (93.272 + 13.229350 * d);    // mean distance from node
+  const l = L + RAD * 6.289 * Math.sin(M);     // longitude
+  const b = RAD * 5.128 * Math.sin(F);         // latitude
+  return { ra: eclRightAscension(l, b), dec: eclDeclination(l, b) };
+}
+function moonHorizontal(date) {
+  const lw = RAD * -WX.lon, phi = RAD * WX.lat;
+  const d = toDays(date);
+  const c = moonEcliptic(d);
+  const H = RAD * (280.16 + 360.9856235 * d) - lw - c.ra;       // hour angle
+  return {
+    altitude: Math.asin(Math.sin(phi) * Math.sin(c.dec) + Math.cos(phi) * Math.cos(c.dec) * Math.cos(H)),
+    azimuth: Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(c.dec) * Math.cos(phi)),
+  };
+}
+
+/* scan the next 24h for the real rise/set crossings */
+function moonRiseSet(now) {
+  let rise = null, set = null;
+  let prev = moonHorizontal(now).altitude;
+  for (let m = 5; m <= 24 * 60 && (!rise || !set); m += 5) {
+    const t = new Date(now.getTime() + m * 60000);
+    const alt = moonHorizontal(t).altitude;
+    if (prev <= 0 && alt > 0 && !rise) rise = t;
+    if (prev > 0 && alt <= 0 && !set) set = t;
+    prev = alt;
+  }
+  return { rise, set };
+}
+
+/* map the real sky onto the scene: azimuth (east→west) spans the
+   viewport like the sun's arc; altitude climbs from the horizon */
+function moonScreenPos(pos) {
+  const horizon = innerHeight * 0.58;
+  const az = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pos.azimuth)); // east..west
+  const x = innerWidth * (0.5 + 0.44 * (az / (Math.PI / 2)));
+  const y = horizon - Math.sin(Math.max(0, pos.altitude)) * innerHeight * 0.5;
+  return { x, y: Math.max(50, y) };
+}
+
 function drawMoon(x, y, r, p, night) {
   const lit = moonIllum(p);
   const glow = wctx.createRadialGradient(x, y, 4, x, y, 80);
@@ -863,11 +929,17 @@ function drawWx() {
     wctx.beginPath(); wctx.arc(x, y, 120, 0, Math.PI * 2); wctx.fill();
     wctx.fillStyle = "rgba(255, 190, 85, .92)";
     wctx.beginPath(); wctx.arc(x, y, 24, 0, Math.PI * 2); wctx.fill();
-  } else {
-    const span = sr + 86400000 - ss;
-    const frac = ((n > ss ? n - ss : n + 86400000 - ss)) / span;
-    const { x, y } = celestialPos(frac);
-    drawMoon(x, y, 20, moonPhase(now), true);
+  }
+
+  /* the moon appears only when it is really above Astoria's horizon —
+     bright at night, a faint ghost by day */
+  const mpos = moonHorizontal(now);
+  if (mpos.altitude > 0.02) {
+    const { x, y } = moonScreenPos(mpos);
+    wctx.save();
+    wctx.globalAlpha = night ? 1 : 0.35;
+    drawMoon(x, y, night ? 20 : 15, moonPhase(now), night);
+    wctx.restore();
   }
 
   const cCol = WX.code === 3 ? "150,158,172" : "196,204,216";
