@@ -491,7 +491,7 @@ function stepFlight() {
     if (f.y > innerHeight + M) { f.y -= innerHeight + 2 * M; shift(0, -(innerHeight + 2 * M)); }
 
     // a long manual flight tows the whole rotation, one headline at a time
-    if (f.t % 720 === 0) {
+    if (f.t % 360 === 0) {
       const b = nextBanner();
       f.bannerText = b.text; f.bannerOpen = b.open;
     }
@@ -711,7 +711,7 @@ function roundRect(x, y, w, h, r) {
 window.addEventListener("resize", () => { if (flight.active) sizeSky(); });
 
 setTimeout(startFlyby, 500);
-setInterval(startFlyby, 22000);
+setInterval(startFlyby, 14000);
 
 /* ============================================================
    LIVE SKY — full-viewport, and it IS the design system: the
