@@ -155,8 +155,17 @@
 
     /* ---- read-along highlighting ---- */
     .essay .reading { box-shadow: inset 4px 0 0 var(--accent); padding-left: .6rem; }
-    .essay .s-now { background: var(--accent-soft); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-    .essay .w-now { color: var(--accent); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    .essay .s-now {
+      background: rgba(192, 86, 33, 0.18);
+      box-decoration-break: clone; -webkit-box-decoration-break: clone;
+      box-shadow: 0 0 0 3px rgba(192, 86, 33, 0.18);
+      border-radius: 2px;
+    }
+    .essay .w-now {
+      color: #fff; background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent);
+      border-radius: 2px;
+    }
 
     /* ---- essay body ---- */
     .essay p { margin-bottom: 1.15rem; }
@@ -267,7 +276,7 @@
       <audio id="radio-audio" src="ai-layoff-trap.m4a" preload="metadata"></audio>
       <span class="radio-label">☊ The Radio Edition</span>
       <p class="radio-desc">This dispatch is narrated by a neural voice. Press play and follow
-        along — the sentence being read is washed in ink, the spoken word underlined, and the
+        along — the sentence being read is washed in ink, the spoken word marked, and the
         page keeps pace on its own.</p>
       <div class="radio-controls">
         <button class="radio-btn" id="radio-play" aria-label="Play or pause the narration">▶</button>
