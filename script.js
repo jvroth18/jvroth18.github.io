@@ -11,7 +11,7 @@ const SOCIALS = {
   email:    "mailto:jordan@gettalky.ai",
   github:   "https://github.com/jvroth18",
   linkedin: "https://www.linkedin.com/in/jordan-rothstein",
-  x:        "https://x.com/jordanrothstein",                 // TODO: confirm handle
+  x:        "https://x.com/jordanroth_",
   talky:    "https://www.gettalky.ai",
 };
 
@@ -146,7 +146,7 @@ function clipHtml(kind) {
       ["email", "jordan@gettalky.ai", SOCIALS.email],
       ["github", "jvroth18", SOCIALS.github],
       ["linkedin", "/in/jordan-rothstein", SOCIALS.linkedin],
-      ["x", "@jordanrothstein", SOCIALS.x],
+      ["x", "@jordanroth_", SOCIALS.x],
       ["work", "gettalky.ai", SOCIALS.talky],
     ];
     return `
