@@ -94,9 +94,12 @@ const BANNER_ROTATION = [
 /* ---------------- Toasts ---------------- */
 
 const toastWrap = document.getElementById("toasts");
-function toast(body, title) {
+function toast(body, title, tag) {
+  // tagged toasts are singletons: a new one replaces any still showing
+  if (tag) toastWrap.querySelectorAll(`[data-tag="${tag}"]`).forEach((t) => t.remove());
   const el = document.createElement("div");
   el.className = "toast";
+  if (tag) el.dataset.tag = tag;
   el.innerHTML = `${title ? `<div class="toast-title">${title}</div>` : ""}<div class="toast-body"></div>`;
   el.querySelector(".toast-body").textContent = body;
   toastWrap.appendChild(el);
@@ -351,7 +354,9 @@ const flight = {
 const PHYS = { thrust: 0.075, drag: 0.003, grav: 0.05, vMin: 1.1, vMax: 6.5, vStall: 1.7, vRecover: 2.7 };
 const ROPE_SEGS = 9, ROPE_SP = 7, TAIL = 30;
 const bannerQueue = [];
-let rotationIdx = 0;
+/* the rotation continues across visits, so each page load leads with a
+   different headline instead of always starting from the top */
+let rotationIdx = (+localStorage.getItem("bannerIdx") || 0) % BANNER_ROTATION.length;
 
 function queueBanner(text, open) {
   bannerQueue.push({ text, open });
@@ -361,6 +366,7 @@ function nextBanner() {
   if (bannerQueue.length) return bannerQueue.shift();
   const b = BANNER_ROTATION[rotationIdx % BANNER_ROTATION.length];
   rotationIdx++;
+  localStorage.setItem("bannerIdx", rotationIdx % BANNER_ROTATION.length);
   return b;
 }
 
@@ -409,12 +415,12 @@ function startFlyby() {
 
 function takeControls() {
   const f = flight;
-  if (f.active && f.mode === "manual") { toast("already airborne — esc to land.", "flight deck"); return; }
+  if (f.active && f.mode === "manual") { toast("already airborne — esc to land.", "flight deck", "flight"); return; }
   if (f.active) f.mode = "manual";
   else { beginFlight("manual"); f.x = -160; }
   hud.hidden = false;
   hud.textContent = "✈  ← → steer · ↑ ↓ throttle · esc to land";
-  toast("engines on — arrows to steer, esc to land.", "flight deck");
+  toast("engines on — arrows to steer, esc to land.", "flight deck", "flight");
 }
 
 function stopFlight(silent) {
@@ -422,7 +428,7 @@ function stopFlight(silent) {
   f.active = false; f.bannerBox = null;
   cancelAnimationFrame(f.raf);
   sky.hidden = true; hud.hidden = true;
-  if (!silent && f.mode === "manual") toast("landed.", "flight deck");
+  if (!silent && f.mode === "manual") toast("landed.", "flight deck", "flight");
 }
 
 function stepFlight() {
@@ -457,7 +463,7 @@ function stepFlight() {
       if (f.speed < PHYS.vStall && climb > 0.2) {
         f.stalled = true;
         hud.textContent = "✈  STALL — nose down, build airspeed";
-        toast("stall! the wing quit — nose down to recover.", "flight deck");
+        toast("stall! the wing quit — nose down to recover.", "flight deck", "flight");
       }
     }
     if (f.stalled) {
@@ -698,7 +704,7 @@ function roundRect(x, y, w, h, r) {
 
 window.addEventListener("resize", () => { if (flight.active) sizeSky(); });
 
-setTimeout(startFlyby, 1200);
+setTimeout(startFlyby, 500);
 setInterval(startFlyby, 22000);
 
 /* ============================================================
