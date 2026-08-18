@@ -71,13 +71,17 @@ const POSTS = [
     title: "The AI Layoff Trap Is a Choice, Not a Forecast",
     excerpt: "Math can make an argument more precise. It cannot make a chosen assumption inevitable.",
     url: "dispatches/ai-layoff-trap.html",
+    banner: "NEW DISPATCH — THE AI LAYOFF TRAP",
   },
 ];
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
   { text: "HEY, I'M JORDAN", open: "contact" },
-  { text: "NEW DISPATCH — THE AI LAYOFF TRAP", open: "writing" },
+  // the newest dispatch always headlines: its `banner` field, or its title
+  ...(POSTS.length
+    ? [{ text: POSTS[0].banner || `NEW DISPATCH — ${POSTS[0].title.toUpperCase()}`, open: "writing" }]
+    : []),
   { text: "NOW SHIPPING — RELAY", open: "project-0" },
   { text: "READ THE DISPATCHES", open: "writing" },
   { text: "WRITE ME — JORDAN@GETTALKY.AI", open: "contact" },
