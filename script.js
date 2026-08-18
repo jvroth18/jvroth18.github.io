@@ -711,7 +711,7 @@ function roundRect(x, y, w, h, r) {
 window.addEventListener("resize", () => { if (flight.active) sizeSky(); });
 
 setTimeout(startFlyby, 500);
-setInterval(startFlyby, 14000);
+setInterval(startFlyby, 8000);
 
 /* ============================================================
    LIVE SKY — full-viewport, and it IS the design system: the
