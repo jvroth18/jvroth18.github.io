@@ -10,7 +10,7 @@
 const SOCIALS = {
   email:    "mailto:jordan@gettalky.ai",
   github:   "https://github.com/jvroth18",
-  linkedin: "https://www.linkedin.com/in/jordan-rothstein",
+  linkedin: "https://www.linkedin.com/in/jordan-rothstein-862296161/",
   x:        "https://x.com/jordanroth_",
   talky:    "https://www.gettalky.ai",
 };
@@ -75,9 +75,13 @@ const POSTS = [
   },
 ];
 
+/* YTD GitHub contributions — refresh with: python3 update-activity.py */
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-17","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,59,48,98,3,105,63]}; // ACTIVITY-DATA
+
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
   { text: "HEY, I'M JORDAN", open: "contact" },
+  { text: `PRESSES RUNNING — ${ACTIVITY.counts.reduce((s, n) => s + n, 0).toLocaleString()} COMMITS YTD`, open: "activity" },
   // the newest dispatch always headlines: its `banner` field, or its title
   ...(POSTS.length
     ? [{ text: POSTS[0].banner || `NEW DISPATCH — ${POSTS[0].title.toUpperCase()}`, open: "writing" }]
@@ -141,6 +145,51 @@ function clipHtml(kind) {
       <ol class="log-list">${items}</ol>
       <div class="subscribe-row"><a class="btn-solid" href="${SOCIALS.linkedin}" target="_blank" rel="noopener">follow on linkedin ↗</a></div>`;
   }
+  if (kind === "activity") {
+    const c = ACTIVITY.counts;
+    const total = c.reduce((s, n) => s + n, 0);
+    const active = c.filter(Boolean).length;
+    let best = 0, cur = 0;
+    c.forEach((n) => { cur = n ? cur + 1 : 0; if (cur > best) best = cur; });
+    const peak = Math.max(0, ...c);
+    const bucket = (n) => (n === 0 ? 0 : n < 10 ? 1 : n < 30 ? 2 : n < 80 ? 3 : 4);
+    const startDow = new Date(ACTIVITY.start + "T12:00:00").getDay();
+    const nWeeks = Math.ceil((startDow + c.length) / 7);
+    const pad = Array.from({ length: startDow }, () => `<span class="act-cell" data-b="pad"></span>`);
+    const cells = c.map((n, i) => {
+      const d = new Date(ACTIVITY.start + "T12:00:00");
+      d.setDate(d.getDate() + i);
+      const label = `${d.toLocaleDateString([], { month: "short", day: "numeric" })} — ${n} contribution${n === 1 ? "" : "s"}`;
+      return `<span class="act-cell" data-b="${bucket(n)}" title="${label}"></span>`;
+    });
+    const months = [];
+    for (let i = 0; i < c.length; i++) {
+      const d = new Date(ACTIVITY.start + "T12:00:00");
+      d.setDate(d.getDate() + i);
+      if (d.getDate() === 1 || i === 0) {
+        months.push(`<span style="grid-column:${Math.floor((startDow + i) / 7) + 1}">${d.toLocaleDateString([], { month: "short" })}</span>`);
+      }
+    }
+    return `
+      <p class="clip-eyebrow">the composing room · development activity</p>
+      <h2 class="clip-title" id="clip-title">Set in type, daily</h2>
+      <p class="clip-desc">Every square is a day of ${new Date().getFullYear()}; the darker the ink,
+        the heavier the print run. Live from GitHub, year to date.</p>
+      <dl class="spec">
+        <div><dt>commits</dt><dd>${total.toLocaleString()} contributions ytd</dd></div>
+        <div><dt>cadence</dt><dd>${active} of ${c.length} days active (${Math.round((active / c.length) * 100)}%)</dd></div>
+        <div><dt>streak</dt><dd>${best} consecutive days, longest</dd></div>
+        <div><dt>peak</dt><dd>${peak} contributions in one day</dd></div>
+      </dl>
+      <div class="act-wrap">
+        <div class="act-months" style="grid-template-columns:repeat(${nWeeks},14px)">${months.join("")}</div>
+        <div class="act-grid">${pad.join("")}${cells.join("")}</div>
+        <div class="act-legend">less
+          <span class="act-cell" data-b="0"></span><span class="act-cell" data-b="1"></span><span class="act-cell" data-b="2"></span><span class="act-cell" data-b="3"></span><span class="act-cell" data-b="4"></span>
+          more · updated ${ACTIVITY.updated}</div>
+      </div>
+      <a class="btn-solid" href="${SOCIALS.github}" target="_blank" rel="noopener">github/${ACTIVITY.login} ↗</a>`;
+  }
   if (kind === "contact") {
     const rows = [
       ["email", "jordan@gettalky.ai", SOCIALS.email],
@@ -187,6 +236,7 @@ const COMMANDS = [
   { id: "tracker", glyph: "§", label: "tracker", desc: "open-source CLI", kw: "project oss", run: () => openClip("project-3") },
   { id: "writing", glyph: "✎", label: "Dispatches", desc: "essays from the water tower", kw: "blog essays writing", run: () => openClip("writing") },
   { id: "contact", glyph: "@", label: "The Post", desc: "write to the editor", kw: "email correspondence", run: () => openClip("contact") },
+  { id: "activity", glyph: "▦", label: "The Composing Room", desc: "YTD commit activity, live from GitHub", kw: "commits contributions development github activity", run: () => openClip("activity") },
   { id: "fly", glyph: "✈", label: "Fly the Biplane", desc: "arrows steer · ↑↓ throttle · esc lands", kw: "plane game", run: () => takeControls() },
   { id: "weather", glyph: "☁", label: "Sky Report", desc: "live from astoria, n.y.", kw: "moon sun forecast", run: () => weatherReport() },
   { id: "github", glyph: "↗", label: "GitHub", desc: "github.com/jvroth18", kw: "code", run: () => window.open(SOCIALS.github, "_blank", "noopener") },
@@ -298,7 +348,7 @@ const flight = {
   bannerText: "", bannerOpen: null, bannerBox: null,
 };
 
-const PHYS = { thrust: 0.075, drag: 0.003, grav: 0.05, vMin: 1.1, vMax: 6.5 };
+const PHYS = { thrust: 0.075, drag: 0.003, grav: 0.05, vMin: 1.1, vMax: 6.5, vStall: 1.7, vRecover: 2.7 };
 const ROPE_SEGS = 9, ROPE_SP = 7, TAIL = 30;
 const bannerQueue = [];
 let rotationIdx = 0;
@@ -336,7 +386,7 @@ function beginFlight(mode) {
   const lane = flybyLane();
   f.baseY = lane.top + (lane.bottom - lane.top) * (0.25 + Math.random() * 0.5);
   f.y = f.baseY;
-  f.angle = 0; f.speed = 2.4; f.throttle = 0.45; f.roll = 0; f.t = 0;
+  f.angle = 0; f.speed = 2.4; f.throttle = 0.45; f.roll = 0; f.t = 0; f.stalled = false;
   f.trail = []; f.particles = [];
   initRope(f);
   sizeSky();
@@ -387,16 +437,40 @@ function stepFlight() {
     if (f.x > innerWidth + 260) { stopFlight(true); return; }
   } else {
     const turn = (f.keys.ArrowRight ? 1 : 0) - (f.keys.ArrowLeft ? 1 : 0);
-    const turnRate = 0.05 * Math.min(1.6, Math.max(0.55, 3.4 / f.speed));
+    // a stalled wing has almost no control authority
+    const authority = f.stalled ? 0.22 : 1;
+    const turnRate = 0.05 * Math.min(1.6, Math.max(0.55, 3.4 / f.speed)) * authority;
     f.angle += turn * turnRate;
     f.roll += (turn - f.roll) * 0.08;
     if (f.keys.ArrowUp) f.throttle = Math.min(1, f.throttle + 0.02);
     if (f.keys.ArrowDown) f.throttle = Math.max(0, f.throttle - 0.02);
     f.speed += f.throttle * PHYS.thrust - PHYS.drag * f.speed * f.speed + PHYS.grav * Math.sin(f.angle);
     f.speed = Math.max(PHYS.vMin, Math.min(PHYS.vMax, f.speed));
-    if (f.speed <= PHYS.vMin + 0.08 && Math.sin(f.angle) < -0.1) {
-      f.angle += (Math.cos(f.angle) >= 0 ? 1 : -1) * 0.014;
+
+    const climb = -Math.sin(f.angle);   // y is down: positive while climbing
+    if (!f.stalled) {
+      // pre-stall buffet: slow and nose-high, the airframe shudders
+      if (f.speed < PHYS.vStall * 1.18 && climb > 0.15) {
+        f.angle += Math.sin(f.t * 0.9) * 0.008;
+      }
+      // the stall: too slow with the nose up — the wing quits
+      if (f.speed < PHYS.vStall && climb > 0.2) {
+        f.stalled = true;
+        hud.textContent = "✈  STALL — nose down, build airspeed";
+        toast("stall! the wing quit — nose down to recover.", "flight deck");
+      }
     }
+    if (f.stalled) {
+      // nose drops toward the dive, the plane sinks and shudders
+      f.angle += (Math.cos(f.angle) >= 0 ? 1 : -1) * 0.05;
+      f.angle += Math.sin(f.t * 1.3) * 0.012;
+      f.y += 2.2 * Math.max(0, 1 - climb);
+      if (f.speed > PHYS.vRecover && climb < 0.1) {
+        f.stalled = false;
+        hud.textContent = "✈  ← → steer · ↑ ↓ throttle · esc to land";
+      }
+    }
+
     f.x += Math.cos(f.angle) * f.speed;
     f.y += Math.sin(f.angle) * f.speed;
     const M = 200;
