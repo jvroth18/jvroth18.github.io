@@ -86,19 +86,28 @@
       margin-bottom: 1.2rem;
     }
 
-    /* ---- the radio edition (read-aloud player) ---- */
+    /* ---- the radio edition: a vertical dock, pinned to the page edge ---- */
     .radio {
+      position: fixed; z-index: 10;
+      right: clamp(.6rem, 2.5vw, 2rem); top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .55rem;
+      width: 64px;
+      padding: .8rem .6rem;
       border: 2px solid var(--line-strong);
       background: var(--paper-raise);
       box-shadow: 4px 4px 0 rgba(20, 18, 16, 0.12);
-      padding: .85rem 1rem;
-      margin-bottom: 2.4rem;
       font-family: var(--mono);
     }
-    .radio-row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+    .radio-label {
+      writing-mode: vertical-rl;
+      font-size: .6rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--accent); font-weight: 600;
+      margin-bottom: .1rem;
+    }
     .radio-btn {
-      font-family: var(--mono); font-size: .85rem; line-height: 1;
-      width: 40px; height: 40px; flex: none;
+      font-family: var(--mono); font-size: .8rem; line-height: 1;
+      width: 38px; height: 38px; flex: none;
       display: grid; place-items: center;
       border: 1px solid var(--line-strong); background: var(--paper-raise);
       color: var(--ink); cursor: pointer;
@@ -106,16 +115,38 @@
       transition: all .2s ease;
     }
     .radio-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .radio-btn.small { width: 32px; height: 32px; font-size: .7rem; }
-    .radio-meta { flex: 1; min-width: 150px; }
-    .radio-label {
-      font-size: .64rem; letter-spacing: .18em; text-transform: uppercase;
-      color: var(--accent); font-weight: 600;
+    .radio-btn.small { width: 30px; height: 30px; font-size: .66rem; }
+    .radio-track {
+      width: 4px; flex: none; height: 140px;
+      background: var(--line); cursor: pointer;
+      position: relative;
     }
-    .radio-sub { font-size: .64rem; letter-spacing: .06em; color: var(--ink-faint); margin-top: .2rem; }
-    .radio-count { font-size: .62rem; letter-spacing: .08em; color: var(--ink-faint); white-space: nowrap; }
-    .radio-track { height: 4px; background: var(--line); margin-top: .75rem; }
-    .radio-fill { height: 100%; width: 0%; background: var(--accent); transition: width .3s ease; }
+    .radio-fill { width: 100%; height: 0%; background: var(--accent); transition: height .3s ease; }
+    .radio-time {
+      writing-mode: vertical-rl;
+      font-size: .58rem; letter-spacing: .1em; color: var(--ink-faint);
+      white-space: nowrap;
+    }
+    .radio-count { font-size: .56rem; letter-spacing: .04em; color: var(--ink-faint); white-space: nowrap; }
+
+    @media (max-width: 900px), (max-height: 560px) {
+      .radio {
+        top: auto; bottom: 0; right: 0; left: 0; transform: none;
+        width: auto; flex-direction: row; justify-content: center;
+        gap: .7rem; padding: .6rem .9rem;
+        border-width: 2px 0 0 0; box-shadow: 0 -4px 12px rgba(20, 18, 16, 0.08);
+      }
+      .radio-label { writing-mode: horizontal-tb; margin: 0; }
+      .radio-track { width: clamp(70px, 22vw, 180px); height: 4px; }
+      .radio-fill { height: 100%; width: 0%; transition: width .3s ease; }
+      .radio-time { writing-mode: horizontal-tb; }
+      .sheet { padding-bottom: 6.5rem; }
+    }
+
+    /* ---- read-along highlighting ---- */
+    .essay .reading { box-shadow: inset 4px 0 0 var(--accent); padding-left: .6rem; }
+    .essay .s-now { background: var(--accent-soft); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .essay .w-now { color: var(--accent); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
 
     /* ---- essay body ---- */
     .essay p { margin-bottom: 1.15rem; }
@@ -142,13 +173,6 @@
     .essay em { font-style: italic; }
     .essay a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
     .essay a:hover { color: var(--accent); }
-
-    .essay .reading {
-      background: var(--accent-soft);
-      box-shadow: inset 4px 0 0 var(--accent);
-      padding-left: .6rem;
-      transition: background .3s ease;
-    }
 
     /* ---- figures ---- */
     figure {
@@ -229,21 +253,17 @@
       replacement will become the default use of AI.</p>
     <p class="dateline">August 17, 2026 · by Jordan Rothstein · ≈ 12 min read</p>
 
-    <div class="radio" id="radio">
-      <audio id="radio-audio" src="ai-layoff-trap.mp3" preload="metadata"></audio>
-      <div class="radio-row">
-        <button class="radio-btn" id="radio-play" aria-label="Play or pause the reading">▶</button>
-        <button class="radio-btn small" id="radio-back" aria-label="Back one paragraph">‹</button>
-        <button class="radio-btn small" id="radio-fwd" aria-label="Forward one paragraph">›</button>
-        <span class="radio-meta">
-          <span class="radio-label">☊ The Radio Edition</span>
-          <span class="radio-sub" id="radio-sub">narrated by a neural voice · 13:40</span>
-        </span>
-        <button class="radio-btn small" id="radio-rate" aria-label="Toggle reading speed">1×</button>
-        <span class="radio-count" id="radio-count"></span>
-      </div>
-      <div class="radio-track" id="radio-track"><div class="radio-fill" id="radio-fill"></div></div>
-    </div>
+    <aside class="radio" id="radio" aria-label="The Radio Edition — audio narration">
+      <audio id="radio-audio" src="ai-layoff-trap.m4a" preload="metadata"></audio>
+      <span class="radio-label">☊ Radio Edition</span>
+      <button class="radio-btn" id="radio-play" aria-label="Play or pause the narration">▶</button>
+      <button class="radio-btn small" id="radio-back" aria-label="Back one sentence">‹</button>
+      <button class="radio-btn small" id="radio-fwd" aria-label="Forward one sentence">›</button>
+      <button class="radio-btn small" id="radio-rate" aria-label="Toggle narration speed">1×</button>
+      <div class="radio-track" id="radio-track" aria-label="Seek"><div class="radio-fill" id="radio-fill"></div></div>
+      <span class="radio-time" id="radio-time">0:00</span>
+      <span class="radio-count" id="radio-count"></span>
+    </aside>
 
     <div class="essay" id="essay">
       <p>I saw a paper called <em>The AI Layoff Trap</em> making the rounds on X and decided to spend
@@ -614,11 +634,13 @@
   </div>
 
   <script>
-    /* ---- THE RADIO EDITION — a neural narration of the dispatch,
-       with the current paragraph highlighted as it reads ---- */
+    /* ---- THE RADIO EDITION — a locally-generated neural narration.
+       Sentence-exact timings drive a three-layer read-along: the
+       current paragraph is ruled, the current sentence is washed,
+       and the current word is underlined as it is spoken. ---- */
     (function () {
-      // start time (seconds) of each essay item in the narration
-      const TIMINGS = [13.7,19.85,24.62,37.97,40.3,56.5,58.27,63.46,65.23,67.44,76.58,93.19,98.47,114.82,121.39,134.86,152.04,153.82,156.17,158.54,167.47,183.6,203.4,205.46,217.49,222.0,236.93,240.34,255.65,258.72,277.8,293.62,295.42,303.41,306.55,311.09,319.99,325.06,329.62,342.41,344.52,352.49,355.2,356.98,360.24,364.18,367.94,376.68,379.22,394.92,404.26,406.82,408.94,413.62,417.89,428.3,432.74,459.12,467.71,472.39,476.83,502.2,514.9,518.66,532.68,534.46,558.29,561.96,572.09,573.89,582.7,595.61,602.04,608.14,610.37,615.67,618.14,621.55,630.94,634.66,637.25,640.42,643.01,645.65,651.82,654.5,659.33,661.87,672.07,686.33,690.22,693.19,701.3,703.27,705.14,714.98,725.83,728.47,730.44,734.35,743.88,753.96,755.74,758.28,777.58,779.74,781.73,793.32,796.73,800.21,803.16,804.98,806.76,808.63,811.39,814.73,818.78];
+      // segs: [paragraphIndex (-1 = prologue), startSec, durSec, wordCount]
+      const TIMINGS = {"total":904.03,"segs":[[-1,0.0,2.86,10],[-1,2.98,2.15,6],[-1,5.25,4.95,16],[-1,10.32,3.16,8],[0,13.9,6.68,23],[1,21.0,3.09,7],[1,24.21,1.54,7],[2,26.17,9.66,27],[2,35.95,4.33,14],[3,40.7,2.28,6],[4,43.4,17.43,42],[5,61.25,1.6,6],[6,63.27,5.55,17],[7,69.24,1.37,5],[8,71.03,2.3,6],[9,73.75,5.42,15],[9,79.29,3.18,9],[10,82.89,3.56,11],[10,86.57,4.03,13],[10,90.72,9.19,20],[11,100.34,5.33,17],[12,106.09,1.66,4],[12,107.87,8.34,23],[12,116.33,7.23,17],[13,123.99,6.53,21],[14,130.93,2.18,8],[14,133.23,5.53,13],[14,138.88,6.27,17],[15,145.57,9.15,24],[15,154.84,9.17,19],[16,164.43,1.69,7],[17,166.54,2.3,8],[18,169.26,1.86,7],[19,171.54,4.57,11],[19,176.22,3.93,13],[20,180.57,7.98,21],[20,188.67,9.02,22],[21,198.11,10.24,26],[21,208.47,10.97,27],[22,219.86,2.03,7],[23,222.3,4.95,13],[23,227.37,7.77,23],[24,235.56,4.48,15],[25,240.46,2.82,10],[25,243.39,1.75,7],[25,245.26,10.77,28],[26,256.46,3.41,11],[27,260.29,3.35,8],[27,263.76,12.54,32],[28,276.72,3.65,10],[29,280.79,7.25,18],[29,288.17,6.21,14],[29,294.49,6.91,14],[30,301.83,2.86,6],[30,304.8,14.04,33],[31,319.26,1.64,3],[32,321.32,4.22,9],[32,325.67,4.22,11],[33,330.31,2.86,8],[34,333.59,4.63,14],[35,338.64,9.49,23],[36,348.55,4.84,11],[37,353.82,4.03,10],[38,358.27,6.7,18],[38,365.09,6.76,10],[39,372.27,2.09,7],[40,374.78,3.78,9],[40,378.68,4.52,13],[41,383.62,2.56,8],[42,386.6,1.28,5],[43,388.3,3.31,9],[44,392.03,4.01,10],[45,396.46,3.84,11],[46,400.72,9.05,21],[47,410.18,2.62,7],[48,413.23,8.62,23],[48,421.96,7.85,18],[49,430.23,4.12,10],[49,434.47,5.48,19],[50,440.37,2.71,8],[51,443.5,1.62,6],[52,445.55,4.76,14],[53,450.72,4.33,15],[54,455.47,11.24,26],[55,467.14,4.48,15],[56,472.04,12.91,25],[56,485.06,4.03,8],[56,489.21,12.12,27],[57,501.75,3.78,10],[57,505.65,4.97,16],[58,511.04,4.74,14],[59,516.19,4.84,13],[60,521.46,10.88,20],[60,532.46,6.91,15],[60,539.49,9.56,28],[61,549.47,3.78,13],[61,553.36,9.47,23],[62,563.25,4.18,11],[63,567.86,4.46,14],[63,572.43,11.33,32],[64,584.18,1.64,6],[65,586.25,13.85,29],[65,600.21,13.27,28],[66,613.9,3.39,10],[67,617.71,10.67,24],[68,628.8,1.64,6],[69,630.86,9.79,28],[70,641.07,4.18,10],[70,645.37,9.34,22],[71,655.14,6.91,21],[72,662.47,6.21,17],[73,669.1,2.07,5],[74,671.59,5.87,12],[75,677.87,2.5,12],[76,680.79,3.22,6],[77,684.43,9.6,22],[78,694.45,3.73,11],[79,698.61,2.5,8],[80,701.52,3.24,9],[81,705.18,2.47,8],[82,708.08,2.69,8],[83,711.19,6.46,18],[84,718.07,2.73,10],[85,721.22,2.11,5],[85,723.45,2.52,6],[86,726.39,2.75,7],[87,729.56,5.65,15],[87,735.34,5.23,17],[88,740.98,15.49,38],[89,756.89,3.8,12],[90,761.11,2.79,6],[91,764.32,4.54,15],[91,768.99,3.61,12],[92,773.01,1.62,5],[93,775.05,1.86,5],[94,777.33,6.06,14],[94,783.51,3.88,13],[95,787.81,11.18,34],[96,799.41,2.54,9],[97,802.37,1.56,5],[98,804.35,3.71,9],[99,808.48,10.09,23],[100,818.99,1.13,2],[100,820.24,2.03,4],[100,822.39,1.58,3],[100,824.08,5.18,13],[101,829.69,1.49,4],[102,831.6,2.41,9],[103,834.43,7.96,17],[103,842.51,14.06,28],[104,856.99,1.79,6],[105,859.2,1.81,8],[106,861.43,3.88,11],[106,865.44,8.7,20],[107,874.56,3.52,10],[108,878.5,3.46,11],[109,882.38,3.11,9],[110,885.91,1.66,6],[111,887.99,1.13,4],[112,889.55,1.62,7],[113,891.59,2.65,10],[114,894.65,3.2,12],[115,898.27,4.2,10],[116,902.89,1.13,2]]};
 
       const audio = document.getElementById("radio-audio");
       const playBtn = document.getElementById("radio-play");
@@ -628,14 +650,56 @@
       const track = document.getElementById("radio-track");
       const fill = document.getElementById("radio-fill");
       const count = document.getElementById("radio-count");
-      const sub = document.getElementById("radio-sub");
+      const timeEl = document.getElementById("radio-time");
       const items = Array.from(document.querySelectorAll("#essay > p, #essay > h2"));
-      let lastIdx = -1;
 
-      function idxAt(t) {
-        let i = -1;
-        while (i + 1 < TIMINGS.length && TIMINGS[i + 1] <= t) i++;
-        return i;
+      /* wrap every word of every essay item in a span */
+      function wrapWords(el) {
+        const spans = [];
+        (function walk(node) {
+          for (const child of Array.from(node.childNodes)) {
+            if (child.nodeType === Node.TEXT_NODE) {
+              const frag = document.createDocumentFragment();
+              for (const tok of child.textContent.split(/(\s+)/)) {
+                if (!tok) continue;
+                if (/\s/.test(tok)) frag.appendChild(document.createTextNode(tok));
+                else {
+                  const s = document.createElement("span");
+                  s.textContent = tok;
+                  frag.appendChild(s);
+                  spans.push(s);
+                }
+              }
+              child.replaceWith(frag);
+            } else if (child.nodeType === Node.ELEMENT_NODE) walk(child);
+          }
+        })(el);
+        return spans;
+      }
+      const itemSpans = items.map(wrapWords);
+
+      /* attach each timing segment to its word spans + char-weighted offsets */
+      const cursors = items.map(() => 0);
+      const segs = TIMINGS.segs.map(([p, start, dur, nWords]) => {
+        let spans = [];
+        if (p >= 0 && p < items.length) {
+          spans = itemSpans[p].slice(cursors[p], cursors[p] + nWords);
+          cursors[p] += nWords;
+        }
+        let total = 0;
+        const cum = spans.map((s) => (total += s.textContent.length + 1));
+        return { p, start, dur, spans, cum, total };
+      });
+
+      const st = { seg: -1, word: -1, para: -1 };
+
+      function segAt(t) {
+        let lo = 0, hi = segs.length - 1, ans = -1;
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1;
+          if (segs[mid].start <= t) { ans = mid; lo = mid + 1; } else hi = mid - 1;
+        }
+        return ans;
       }
 
       function fmt(s) {
@@ -643,36 +707,64 @@
         return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
       }
 
-      function paint() {
-        const t = audio.currentTime;
-        const idx = idxAt(t);
-        if (idx !== lastIdx) {
-          items.forEach((el, i) => el.classList.toggle("reading", !audio.paused && i === idx));
-          if (!audio.paused && idx >= 0) items[idx].scrollIntoView({ block: "center", behavior: "smooth" });
-          lastIdx = idx;
-        } else if (audio.paused && lastIdx >= 0) {
-          items.forEach((el) => el.classList.remove("reading"));
-          lastIdx = -1;
+      function keepInView(el) {
+        const r = el.getBoundingClientRect();
+        if (r.top < innerHeight * 0.18 || r.bottom > innerHeight * 0.72) {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
         }
-        const dur = audio.duration || 820.56;
-        fill.style.width = `${(t / dur) * 100}%`;
-        count.textContent = idx >= 0 ? `¶ ${idx + 1}/${items.length}` : "prologue";
-        playBtn.textContent = audio.paused ? "▶" : "❚❚";
-        sub.textContent = `narrated by a neural voice · ${fmt(t)} / ${fmt(dur)}`;
       }
+
+      function tick() {
+        const t = audio.currentTime;
+        const i = segAt(t);
+        const seg = segs[i];
+
+        if (i !== st.seg) {
+          if (st.seg >= 0) segs[st.seg].spans.forEach((s) => s.classList.remove("s-now", "w-now"));
+          if (seg) seg.spans.forEach((s) => s.classList.add("s-now"));
+          const para = seg ? seg.p : -1;
+          if (para !== st.para) {
+            items.forEach((el, k) => el.classList.toggle("reading", k === para));
+            st.para = para;
+          }
+          if (!audio.paused && seg && seg.spans.length) keepInView(seg.spans[0]);
+          st.seg = i; st.word = -1;
+        }
+
+        if (seg && seg.spans.length && seg.total) {
+          const frac = Math.min(0.999, Math.max(0, (t - seg.start) / seg.dur));
+          let w = seg.cum.findIndex((c) => frac * seg.total < c);
+          if (w < 0) w = seg.spans.length - 1;
+          if (w !== st.word) {
+            if (st.word >= 0 && seg.spans[st.word]) seg.spans[st.word].classList.remove("w-now");
+            seg.spans[w].classList.add("w-now");
+            st.word = w;
+          }
+        }
+
+        const dur = audio.duration || TIMINGS.total;
+        const vertical = track.offsetHeight > track.offsetWidth;
+        fill.style[vertical ? "height" : "width"] = `${(t / dur) * 100}%`;
+        fill.style[vertical ? "width" : "height"] = "100%";
+        count.textContent = seg && seg.p >= 0 ? `¶${seg.p + 1}` : "☊";
+        timeEl.textContent = `${fmt(t)} / ${fmt(dur)}`;
+        playBtn.textContent = audio.paused ? "▶" : "❚❚";
+      }
+
+      let raf = 0;
+      function loop() { tick(); raf = requestAnimationFrame(loop); }
 
       playBtn.addEventListener("click", () => { audio.paused ? audio.play() : audio.pause(); });
       backBtn.addEventListener("click", () => {
-        const i = idxAt(audio.currentTime);
-        // within a paragraph, restart it; at its head, go to the previous one
-        const target = i < 0 ? 0 : (audio.currentTime - TIMINGS[i] > 2 ? i : Math.max(0, i - 1));
-        audio.currentTime = TIMINGS[target];
-        paint();
+        const i = segAt(audio.currentTime);
+        const target = i < 0 ? 0 : (audio.currentTime - segs[i].start > 1.5 ? i : Math.max(0, i - 1));
+        audio.currentTime = segs[target].start + 0.01;
+        tick();
       });
       fwdBtn.addEventListener("click", () => {
-        const i = idxAt(audio.currentTime);
-        if (i + 1 < TIMINGS.length) audio.currentTime = TIMINGS[i + 1];
-        paint();
+        const i = segAt(audio.currentTime);
+        if (i + 1 < segs.length) audio.currentTime = segs[i + 1].start + 0.01;
+        tick();
       });
       rateBtn.addEventListener("click", () => {
         audio.playbackRate = audio.playbackRate === 1 ? 1.2 : 1;
@@ -680,19 +772,21 @@
       });
       track.addEventListener("click", (e) => {
         const r = track.getBoundingClientRect();
-        audio.currentTime = ((e.clientX - r.left) / r.width) * (audio.duration || 820.56);
-        paint();
+        const vertical = r.height > r.width;
+        const frac = vertical ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width;
+        audio.currentTime = Math.max(0, Math.min(1, frac)) * (audio.duration || TIMINGS.total);
+        tick();
       });
-      audio.addEventListener("timeupdate", paint);
-      audio.addEventListener("play", paint);
-      audio.addEventListener("pause", paint);
-      audio.addEventListener("ended", () => { audio.currentTime = 0; paint(); });
+      audio.addEventListener("play", () => { cancelAnimationFrame(raf); loop(); });
+      audio.addEventListener("pause", () => { cancelAnimationFrame(raf); tick(); });
+      audio.addEventListener("seeked", tick);
+      audio.addEventListener("ended", () => { audio.currentTime = 0; tick(); });
       audio.addEventListener("error", () => {
-        sub.textContent = "the narration could not be loaded";
+        timeEl.textContent = "unavailable";
         [playBtn, backBtn, fwdBtn, rateBtn].forEach((b) => (b.disabled = true));
       });
 
-      paint();
+      tick();
     })();
   </script>
 </body>
