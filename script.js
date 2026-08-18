@@ -62,15 +62,22 @@ const PROJECTS = [
   },
 ];
 
-/* Long-form dispatches. `url` is the canonical LinkedIn post;
+/* Long-form dispatches. `url` is the canonical LinkedIn post, or a
+   relative path for essays printed here on the site itself;
    `x` is the optional X cross-post. Newest first. */
 const POSTS = [
-  // { date: "2026-08-20", title: "…", excerpt: "…", url: "<linkedin post url>", x: "<x post url>" },
+  {
+    date: "2026-08-17",
+    title: "The AI Layoff Trap Is a Choice, Not a Forecast",
+    excerpt: "Math can make an argument more precise. It cannot make a chosen assumption inevitable.",
+    url: "dispatches/ai-layoff-trap.html",
+  },
 ];
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
   { text: "HEY, I'M JORDAN", open: "contact" },
+  { text: "NEW DISPATCH — THE AI LAYOFF TRAP", open: "writing" },
   { text: "NOW SHIPPING — RELAY", open: "project-0" },
   { text: "READ THE DISPATCHES", open: "writing" },
   { text: "WRITE ME — JORDAN@GETTALKY.AI", open: "contact" },
@@ -97,7 +104,8 @@ function prefersReduced() {
 const clipLayer = document.getElementById("clipping-layer");
 const clipBody = document.getElementById("clip-body");
 
-function chip(label, url) { return url ? `<a href="${url}" target="_blank" rel="noopener">${label}</a>` : ""; }
+const ext = (url) => (url.startsWith("http") ? ' target="_blank" rel="noopener"' : "");
+function chip(label, url) { return url ? `<a href="${url}"${ext(url)}>${label}</a>` : ""; }
 
 function clipHtml(kind) {
   if (kind.startsWith("project-")) {
@@ -116,9 +124,9 @@ function clipHtml(kind) {
       ? POSTS.map((p) => `
           <li class="log-item">
             <span class="log-date">${p.date}</span>
-            <span><a class="log-title" href="${p.url}" target="_blank" rel="noopener">${p.title}</a>
+            <span><a class="log-title" href="${p.url}"${ext(p.url)}>${p.title}</a>
               <span class="log-excerpt">${p.excerpt ?? ""}</span></span>
-            <span class="log-chips">${chip("linkedin", p.url)}${chip("x", p.x)}</span>
+            <span class="log-chips">${chip(p.url.startsWith("http") ? "linkedin" : "read", p.url)}${chip("x", p.x)}</span>
           </li>`).join("")
       : `<li class="log-placeholder">the first dispatch is at the printer —
            <a href="${SOCIALS.linkedin}" target="_blank" rel="noopener">follow on LinkedIn</a> to catch it.</li>`;

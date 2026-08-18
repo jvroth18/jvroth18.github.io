@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The AI Layoff Trap Is a Choice, Not a Forecast — Jordan Rothstein</title>
+  <meta name="description" content="The paper identifies a real risk. But its math does not prove that labor replacement will become the default use of AI.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+  <style>
+    /* A clipping from THE EVENING POST — paper stays paper, whatever the sky is doing. */
+    :root {
+      --paper: #f7f3ec;
+      --ink: #141210;
+      --ink-soft: #4c4740;
+      --ink-faint: #8b847a;
+      --line: rgba(20, 18, 16, 0.2);
+      --line-strong: rgba(20, 18, 16, 0.85);
+      --accent: #c05621;
+      --serif: "Newsreader", Georgia, serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 19px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--accent); color: #fff; }
+    a { color: inherit; }
+
+    .sheet {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(1.4rem, 4vw, 3rem) clamp(1.2rem, 4vw, 2rem) 4rem;
+    }
+
+    .return {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--ink-soft); text-decoration: none;
+      border: 1px solid var(--line-strong);
+      padding: .5rem .9rem;
+      box-shadow: 3px 3px 0 rgba(20, 18, 16, 0.1);
+      transition: all .2s ease;
+    }
+    .return:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .masthead-min {
+      margin: 2.2rem 0 0;
+      padding-bottom: .8rem;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: .66rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--ink-faint);
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .masthead-min .rag { color: var(--accent); font-weight: 600; }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 500; line-height: 1.12; letter-spacing: -.01em;
+      margin: 1.6rem 0 1rem;
+      text-wrap: balance;
+    }
+    .standfirst {
+      font-size: 1.22rem; font-style: italic; color: var(--ink-soft);
+      line-height: 1.5; margin-bottom: 1.4rem;
+      text-wrap: balance;
+    }
+    .dateline {
+      font-family: var(--mono);
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--ink-soft);
+      padding: .7rem 0;
+      border-top: 3px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      margin-bottom: 2.2rem;
+    }
+
+    .essay p { margin-bottom: 1.15rem; }
+    .essay p:first-of-type::first-letter {
+      font-size: 3.4em; float: left; line-height: .82;
+      padding: .06em .12em 0 0; font-weight: 500;
+    }
+    .essay h2 {
+      font-size: 1.55rem; font-weight: 500; line-height: 1.2;
+      margin: 2.6rem 0 1rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--line);
+    }
+    .essay strong { font-weight: 600; }
+    .essay em { font-style: italic; }
+    .essay a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .essay a:hover { color: var(--accent); }
+
+    .refs {
+      margin-top: 3rem;
+      border-top: 3px solid var(--line-strong);
+      padding-top: 1.2rem;
+    }
+    .refs h2 {
+      font-family: var(--mono);
+      font-size: .7rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--accent); font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .refs p {
+      font-size: .88rem; color: var(--ink-soft);
+      padding-left: 1.6em; text-indent: -1.6em;
+      margin-bottom: .7rem;
+    }
+
+    .colophon {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--ink-faint);
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .colophon a { color: var(--ink-soft); text-decoration: none; }
+    .colophon a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <a class="return" href="../index.html">← the evening post</a>
+
+    <p class="masthead-min">
+      <span>Jordan Rothstein</span>
+      <span class="rag">Dispatches</span>
+      <span>Astoria, N.Y.</span>
+    </p>
+
+    <h1>The AI Layoff Trap Is a Choice, Not a Forecast</h1>
+    <p class="standfirst">The paper identifies a real risk. But its math does not prove that labor
+      replacement will become the default use of AI.</p>
+    <p class="dateline">August 17, 2026 · by Jordan Rothstein</p>
+
+    <div class="essay">
+      <p>I saw a paper called <em>The AI Layoff Trap</em> making the rounds on X and decided to spend
+        some time going through it.</p>
+      <p>I expected a fairly standard AI-doomer argument. That is not quite what it is.</p>
+      <p>The paper is smart, the mechanism is worth understanding, and the math gives the argument a
+        level of precision that most AI labor discussions do not have. But I also think the headline
+        travels much further than the model actually earns.</p>
+      <p>The paper proves a conditional statement.</p>
+      <p>If AI adoption primarily means replacing workers, if displaced income is not recovered
+        through new work or other sources, and if the capacity created by AI does not generate enough
+        new demand, then companies can collectively automate themselves into a weaker economy.</p>
+      <p>I agree that this can happen.</p>
+      <p>What I do not agree with is treating that outcome as the natural destination of AI
+        adoption.</p>
+      <p>Math can make an argument more precise. It cannot make a chosen assumption inevitable.</p>
+
+      <h2>What the paper gets right</h2>
+      <p>The central mechanism is pretty simple.</p>
+      <p>When a company replaces a worker with AI, the company captures the full payroll savings.
+        That benefit is immediate, visible, and easy to measure.</p>
+      <p>But the worker who loses that income also spends less money. The damage does not fall
+        entirely on the company that made the layoff. It gets spread across restaurants, retailers,
+        software companies, banks, insurers, landlords, and every other business competing for that
+        person&rsquo;s income.</p>
+      <p>The company keeps all of the savings while absorbing only a small portion of the demand
+        loss.</p>
+      <p>That creates an externality. Every company has an incentive to keep automating because
+        slowing down alone would leave it with a higher cost structure than its competitors. Even if
+        executives understand the collective risk, awareness is not necessarily enough to change the
+        individual decision.</p>
+      <p>Every company can make the &ldquo;right&rdquo; decision for itself while all of them
+        together weaken the same market they depend on.</p>
+      <p>This is the strongest part of the paper. It moves the discussion beyond the basic
+        observation that workers are also consumers. It explains why companies may keep cutting even
+        when they can see where widespread cutting eventually leads.</p>
+      <p>In the authors&rsquo; model, each company captures the full labor-cost savings from
+        automation while bearing only a fraction of the demand loss it creates. That causes competing
+        firms to automate beyond the level that would collectively maximize their profits (Falk and
+        Tsoukalas, 2026).</p>
+      <p>I think that is a real risk.</p>
+      <p>But it is still only one possible path.</p>
+
+      <h2>Where the assumptions start doing the work</h2>
+      <p>In the paper&rsquo;s baseline model, every automated task displaces one worker. The
+        automation rate and the layoff rate are treated as the same number.</p>
+      <p>Output is also fixed: a task performed by AI produces exactly the same amount as a task
+        performed by a person. The authors explicitly state that this choice shuts down productivity
+        and quality improvements so they can isolate the spending consequences of displacement.</p>
+      <p>The baseline also uses symmetric firms in one sector, holds wages fixed, and assumes
+        business owners spend none of their additional income inside the modeled sector. Some of
+        these assumptions are relaxed later, but they still shape the initial result and the way the
+        paper is being discussed online (Falk and Tsoukalas, 2026).</p>
+      <p>None of that makes the model invalid.</p>
+      <p>Models are supposed to simplify reality so one mechanism can be studied clearly. The problem
+        begins when the result of that narrow model gets repeated as though it is a forecast of the
+        entire AI economy.</p>
+      <p>AI is not only a cheaper way to perform a fixed list of existing tasks.</p>
+      <p>It can increase the amount of work a team completes. It can improve the quality of work. It
+        can compress learning curves, lower prices, make smaller customers profitable to serve, and
+        allow companies to offer services that were previously too expensive to provide at all.</p>
+      <p>It can also create new tasks that did not exist before.</p>
+      <p>The paper does later introduce higher AI productivity. But even in that extension, the
+        upside is modeled as more units of output from an automated task rather than the creation of
+        entirely new products, services, occupations, or sources of demand.</p>
+      <p>There is an even more important detail inside that extension.</p>
+      <p>The planner&rsquo;s objective is based on nominal income and spending, not the amount of
+        real output consumers receive. When AI productivity rises, the model allows output to
+        increase while prices fall proportionally. Because total nominal spending does not rise, the
+        paper&rsquo;s efficient automation benchmark remains unchanged.</p>
+      <p>The authors acknowledge this limitation directly. They note that their welfare measure
+        understates the real consumption benefits of lower prices and clarify that their result is
+        not a claim that better AI reduces total welfare (Falk and Tsoukalas, 2026).</p>
+      <p>That qualification matters.</p>
+      <p>The paper models a strategic distortion created by productivity. It does not establish that
+        the productivity itself makes society poorer.</p>
+
+      <h2>The trap disappears inside the paper&rsquo;s own model</h2>
+      <p>The most important part of the paper may be its treatment of income reabsorption.</p>
+      <p>The authors use a variable to represent how much of a displaced worker&rsquo;s income is
+        eventually replaced through reemployment, transfers, or other sources.</p>
+      <p>When displaced income is not fully replaced, the model produces over-automation.</p>
+      <p>When the income is fully replaced, the over-automation gap disappears.</p>
+      <p>When displaced workers move into jobs that pay more than the positions they lost, the model
+        actually reverses. Instead of over-automation, it produces under-automation (Falk and
+        Tsoukalas, 2026).</p>
+      <p>That changes the argument quite a bit.</p>
+      <p>The deciding variable is not AI capability by itself. It is how quickly lost income is
+        recreated somewhere else in the economy.</p>
+      <p>How quickly do displaced people find new work?</p>
+      <p>What does that work pay?</p>
+      <p>Do falling costs create lower prices and more demand?</p>
+      <p>Do businesses use their new capacity to enter additional markets?</p>
+      <p>Do new products and companies appear quickly enough to absorb workers?</p>
+      <p>Does the value created by AI remain concentrated, or does it return to the economy through
+        wages, ownership, investment, and consumption?</p>
+      <p>I think of this as <strong>reabsorption velocity</strong>.</p>
+      <p>A transition where productive work and income are recreated in six months looks very
+        different from one where the adjustment takes fifteen years. Both economies may eventually
+        &ldquo;recover&rdquo;, but that does not make the experiences of the displaced workers
+        remotely equivalent.</p>
+      <p>The paper assumes that incomplete reabsorption is the relevant case. That is a valid risk to
+        study, but it is still an assumption about the path the economy takes.</p>
+      <p>It is not an unavoidable property of AI.</p>
+
+      <h2>What the evidence says so far</h2>
+      <p>We do not currently have proof that an economy-wide AI layoff trap is happening.</p>
+      <p>We also do not have enough evidence to confidently say that it will not happen.</p>
+      <p>AI adoption is still early, and companies may reduce labor demand through slower hiring or
+        unfilled positions long before those changes appear as formal AI layoffs.</p>
+      <p>But the evidence we do have does not look like a clean one-for-one replacement story.</p>
+      <p>A 2026 U.S. Census Bureau study using nationally representative business data found that 66%
+        of firms using AI reported using it solely to augment tasks. Only 2% reported an AI-related
+        decrease in employment. Adoption was also still fairly narrow inside many businesses, with
+        most users deploying AI across only a small number of functions and tasks (Bonney et al.,
+        2026).</p>
+      <p>That does not prove augmentation will remain the dominant model. The data is early, and some
+        of it depends on how companies describe their own decisions.</p>
+      <p>But it does challenge the idea that worker replacement is already the default outcome.</p>
+      <p>We also have real evidence that AI can supercharge the workers who remain.</p>
+      <p>A published study of 5,172 customer-support agents found that access to an AI assistant
+        increased productivity by 15% on average. Less experienced and lower-skilled workers saw an
+        approximately 30% increase in issues resolved per hour. Workers with two months of experience
+        and AI assistance performed about as well as workers with more than six months of experience
+        who did not have the tool.</p>
+      <p>The system did not simply perform the job in place of the workers. It helped spread some of
+        the knowledge and practices of stronger employees across the rest of the team (Brynjolfsson,
+        Li, and Raymond, 2025).</p>
+      <p>That is a very different economic mechanism from the one-for-one swap.</p>
+      <p>AI can reduce the amount of labor needed for a given level of output. But it can also make a
+        less experienced worker productive faster, help a smaller team attempt more difficult work,
+        or allow a business to handle demand that it previously could not serve.</p>
+      <p>There are warning signs as well.</p>
+      <p>A separate 2026 Census working paper found that employment among workers ages 22 to 24
+        declined by 12% over ten quarters in the industry-state groups most exposed to AI. The author
+        also identified earlier trend changes around the pandemic that complicate a perfectly clean
+        causal story, but the decline in early-career hiring is still important (Tucker, 2026).</p>
+      <p>This may be where the displacement risk becomes visible first.</p>
+      <p>Not necessarily through one enormous wave of layoffs, but through smaller entry-level
+        classes, fewer junior positions, and roles that quietly disappear when someone leaves.</p>
+      <p>There is a strange tension here.</p>
+      <p>AI may dramatically improve the performance of the junior workers who do get hired while
+        reducing the number of junior workers a company believes it needs to hire.</p>
+      <p>That matters because entry-level work is not only inexpensive labor. It is how people learn
+        an industry, build judgment, make mistakes under supervision, and eventually become the
+        experienced workers companies depend on.</p>
+      <p>A company can remove the bottom rung of the ladder and continue operating for years because
+        it already has senior people.</p>
+      <p>The problem only becomes obvious later, when it realizes it stopped creating the next
+        generation of them.</p>
+
+      <h2>AI creates a capacity dividend</h2>
+      <p>The binary argument around AI is usually framed as replacement versus augmentation.</p>
+      <p>I think there is a more useful way to look at it.</p>
+      <p>Every successful AI deployment releases capacity.</p>
+      <p>It may release employee time, operating cost, management attention, technical expertise, or
+        the ability to process a much larger volume of work.</p>
+      <p>I have started thinking about this as the <strong>AI capacity dividend</strong>.</p>
+      <p>That dividend can be used in several ways.</p>
+      <p>A company can keep output fixed and reduce headcount.</p>
+      <p>It can maintain the team and increase output.</p>
+      <p>It can lower prices and reach more customers.</p>
+      <p>It can improve service, create a new product, or start performing work that never made
+        financial sense before.</p>
+      <p>It can also do some combination of all of these.</p>
+      <p>The technology creates the capacity. Management decides where the dividend goes.</p>
+      <p>I see this directly in insurance automation.</p>
+      <p>One insurance agency can use AI to process its existing quote volume with fewer people.
+        That is a completely valid business case, and in some companies it will be the chosen
+        path.</p>
+      <p>Another agency can use the same technology to approach more carriers for every customer,
+        remarket more renewals, respond to leads in minutes instead of hours, and profitably serve
+        smaller accounts that previously did not justify the manual effort.</p>
+      <p>Before the automation, that additional work was not being done at all.</p>
+      <p>After the automation, it becomes economical.</p>
+      <p>In that case, AI is not dividing the same amount of work among fewer people. It is
+        increasing the total amount of work the market can support.</p>
+      <p>The technology is the same.</p>
+      <p>The management decision is not.</p>
+      <p>Most AI business cases currently begin with hours saved, labor removed, and headcount
+        avoided. Those numbers are easy to measure and easy to place into a spreadsheet.</p>
+      <p>It is much harder to measure the customers we can now serve, the additional work we can now
+        complete, or the products that become possible because the cost of intelligence and execution
+        has fallen.</p>
+      <p>But that may be where the larger value sits.</p>
+
+      <h2>A warning, not a forecast</h2>
+      <p><em>The AI Layoff Trap</em> identifies a legitimate failure mode.</p>
+      <p>If every boardroom defines AI ROI as &ldquo;How much headcount can we remove?&rdquo;,
+        companies may collectively create the exact problem the authors describe.</p>
+      <p>Payroll falls. Income becomes more concentrated. Consumer demand weakens. Every company
+        continues cutting because no individual company can afford to stop first.</p>
+      <p>That future is possible.</p>
+      <p>But the paper does not prove it is inevitable.</p>
+      <p>The authors themselves describe the work as identifying a structural vulnerability rather
+        than diagnosing an active crisis. They acknowledge that the empirical signature would require
+        displacement at a scale and speed beyond what had materialized by the paper&rsquo;s June 2026
+        revision (Falk and Tsoukalas, 2026).</p>
+      <p>The model shows one path clearly.</p>
+      <p>It does not prove that path will win.</p>
+      <p>AI can be used to remove payroll from the existing economy. It can also lower the cost of
+        creating products, delivering services, starting companies, and completing work that was
+        previously uneconomical.</p>
+      <p>The distinction will not be decided by the technology alone.</p>
+      <p>It will be decided by what companies choose to optimize for.</p>
+      <p>So the AI ROI question should not only be:</p>
+      <p><strong>How much labor can we remove?</strong></p>
+      <p>It should also be:</p>
+      <p><strong>What can we now afford to create?</strong></p>
+      <p>That is not a reason to dismiss the layoff trap.</p>
+      <p>It is a reason not to confuse a warning with a forecast.</p>
+      <p>AI does not decide whether productivity becomes layoffs or growth.</p>
+      <p>Management does.</p>
+    </div>
+
+    <div class="refs">
+      <h2>References</h2>
+      <p>Bonney, K., Breaux, C., Dinlersoz, E., Foster, L., Haltiwanger, J., and Pande, A. (2026).
+        <em>The Microstructure of AI Diffusion: Evidence from Firms, Business Functions, and Worker
+        Tasks</em>. U.S. Census Bureau Center for Economic Studies Working Paper CES-26-25.</p>
+      <p>Brynjolfsson, E., Li, D., and Raymond, L. (2025). &ldquo;Generative AI at Work.&rdquo;
+        <em>The Quarterly Journal of Economics</em>, 140(2), 889&ndash;942.
+        DOI: 10.1093/qje/qjae044.</p>
+      <p>Falk, B. H., and Tsoukalas, G. (2026). <em>The AI Layoff Trap</em>. arXiv:2603.20617v3.
+        Revised June 3, 2026. DOI: 10.48550/arXiv.2603.20617.</p>
+      <p>Tucker, L. C. (2026). <em>You&rsquo;re (not) Hired: Artificial Intelligence and Early
+        Career Hiring</em>. U.S. Census Bureau Center for Economic Studies Working Paper
+        CES-26-27.</p>
+    </div>
+
+    <p class="colophon">
+      <a href="../index.html">← back to the front page</a>
+      <span>© 2026 jordan rothstein</span>
+    </p>
+  </div>
+</body>
+</html>
