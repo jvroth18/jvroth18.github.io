@@ -489,6 +489,12 @@ function stepFlight() {
     if (f.x > innerWidth + M) { f.x -= innerWidth + 2 * M; shift(-(innerWidth + 2 * M), 0); }
     if (f.y < -M) { f.y += innerHeight + 2 * M; shift(0, innerHeight + 2 * M); }
     if (f.y > innerHeight + M) { f.y -= innerHeight + 2 * M; shift(0, -(innerHeight + 2 * M)); }
+
+    // a long manual flight tows the whole rotation, one headline at a time
+    if (f.t % 720 === 0) {
+      const b = nextBanner();
+      f.bannerText = b.text; f.bannerOpen = b.open;
+    }
   }
 
   let prev = { x: f.x - Math.cos(f.angle) * TAIL, y: f.y - Math.sin(f.angle) * TAIL };

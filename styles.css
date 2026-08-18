@@ -196,6 +196,9 @@ kbd {
   cursor: pointer;
 }
 .clip-close:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
+@media (pointer: coarse) {
+  .clip-close { padding: .8rem 1.1rem; font-size: .72rem; }
+}
 
 .clip-body { padding: 1.6rem 2rem 1.8rem; }
 .clip-eyebrow {
