@@ -264,6 +264,21 @@ const sky = document.getElementById("sky");
 const hud = document.getElementById("hud");
 const ctx = sky.getContext("2d");
 
+/* the flyby lane: the clear strip of sky between the masthead
+   text (which prints above the plane) and the rooftops (which
+   rise in front of it) — flybys must cross neither */
+function flybyLane() {
+  const mast = document.querySelector(".masthead");
+  const town = document.getElementById("skyline");
+  const top = (mast ? mast.getBoundingClientRect().bottom : innerHeight * 0.28) + 16;
+  const bottom = (town ? town.getBoundingClientRect().top : innerHeight * 0.52) - 22;
+  if (bottom - top < 24) {
+    const mid = (top + bottom) / 2;
+    return { top: mid - 12, bottom: mid + 12 };
+  }
+  return { top, bottom };
+}
+
 const flight = {
   active: false, mode: "auto", raf: 0, t: 0,
   x: 0, y: 0, angle: 0, speed: 2.4, throttle: 0.45, roll: 0, baseY: 160,
@@ -306,7 +321,8 @@ function beginFlight(mode) {
   f.bannerText = b.text; f.bannerOpen = b.open;
   f.active = true; f.mode = mode;
   f.x = -220 - bannerWidth(b.text);
-  f.baseY = innerHeight * (0.3 + Math.random() * 0.12);
+  const lane = flybyLane();
+  f.baseY = lane.top + (lane.bottom - lane.top) * (0.25 + Math.random() * 0.5);
   f.y = f.baseY;
   f.angle = 0; f.speed = 2.4; f.throttle = 0.45; f.roll = 0; f.t = 0;
   f.trail = []; f.particles = [];
