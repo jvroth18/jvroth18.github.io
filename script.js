@@ -60,6 +60,17 @@ const PROJECTS = [
       ["install", "github.com/jvroth18/tracker"],
     ],
   },
+  {
+    dates: "2026", title: "AX", role: "Independent Build · on-device AI",
+    desc: "A voice agent that lives entirely on the iPhone — hold the Action Button, talk to Qwen3 running locally through MLX, and watch it call tools. Ships with a library of local models, a live system monitor, and a faithful Windows-95 desktop for a face. No cloud, no API keys — the phone does the thinking.",
+    link: SOCIALS.github,
+    banner: "NEW ON THE BLOCK — AX",
+    spec: [
+      ["runtime", "Qwen3 via MLX · fully on-device"],
+      ["measured", "45.6 tok/s · 1.8 GB peak · iPhone 17"],
+      ["face", "windows-95 desktop, faithfully"],
+    ],
+  },
 ];
 
 /* Long-form dispatches. `url` is the canonical LinkedIn post, or a
@@ -87,6 +98,7 @@ const BANNER_ROTATION = [
     ? [{ text: POSTS[0].banner || `NEW DISPATCH — ${POSTS[0].title.toUpperCase()}`, open: "writing" }]
     : []),
   { text: "NOW SHIPPING — RELAY", open: "project-0" },
+  { text: "NEW ON THE BLOCK — AX", open: "project-4" },
   { text: "READ THE DISPATCHES", open: "writing" },
   { text: "WRITE ME — JORDAN@GETTALKY.AI", open: "contact" },
 ];
@@ -123,7 +135,7 @@ function clipHtml(kind) {
     const i = +kind.split("-")[1];
     const p = PROJECTS[i];
     return `
-      <p class="clip-eyebrow">things i’ve built · № ${i + 1} of ${PROJECTS.length} · ${p.dates}</p>
+      <p class="clip-eyebrow">things i’ve built · <span style="white-space:nowrap">№ ${i + 1} of ${PROJECTS.length} · ${p.dates}</span></p>
       <h2 class="clip-title" id="clip-title">${p.title}</h2>
       <p class="clip-role">${p.role}</p>
       <p class="clip-desc">${p.desc}</p>
@@ -215,6 +227,9 @@ function clipHtml(kind) {
 function openClip(kind) {
   clipBody.innerHTML = clipHtml(kind);
   clipLayer.hidden = false;
+  // the car drives over to whatever you're reading, however you got there
+  const stopIdx = CAR_STOPS.findIndex((s) => s.open === kind);
+  if (stopIdx >= 0) { car.touched = true; if (stopIdx !== car.idx) driveTo(stopIdx, false); }
   // the plane advertises what you're reading on its next pass
   if (kind.startsWith("project-")) queueBanner(PROJECTS[+kind.split("-")[1]].banner, kind);
   else if (kind === "writing") queueBanner("READ THE DISPATCHES", kind);
@@ -237,6 +252,8 @@ const COMMANDS = [
   { id: "talky", glyph: "§", label: "Talky Voice AI", desc: "the AI front desk", kw: "project voice", run: () => openClip("project-1") },
   { id: "momentum", glyph: "§", label: "Momentum Surface", desc: "path-signature quant research", kw: "project quant", run: () => openClip("project-2") },
   { id: "tracker", glyph: "§", label: "tracker", desc: "open-source CLI", kw: "project oss", run: () => openClip("project-3") },
+  { id: "ax", glyph: "§", label: "AX", desc: "on-device voice agent for iPhone", kw: "project phone voice local mlx qwen", run: () => openClip("project-4") },
+  { id: "drive", glyph: "»", label: "Drive the Street", desc: "← → cruise building to building", kw: "car navigate street", run: () => driveCar(1) },
   { id: "writing", glyph: "✎", label: "Dispatches", desc: "essays from the water tower", kw: "blog essays writing", run: () => openClip("writing") },
   { id: "contact", glyph: "@", label: "The Post", desc: "write to the editor", kw: "email correspondence", run: () => openClip("contact") },
   { id: "activity", glyph: "▦", label: "The Composing Room", desc: "YTD commit activity, live from GitHub", kw: "commits contributions development github activity", run: () => openClip("activity") },
@@ -315,6 +332,18 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (e.key === "Escape") { closeClip(); return; }
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    // coalesce OS key-repeat so a held arrow steps stop by stop
+    if (e.repeat && performance.now() - car.lastNudge < 220) return;
+    car.lastNudge = performance.now();
+    driveCar(e.key === "ArrowRight" ? 1 : -1);
+    return;
+  }
+  if (e.key === "Enter" && document.activeElement === document.body) {
+    e.preventDefault(); openClip(CAR_STOPS[car.idx].open);
+    return;
+  }
   if (e.key.length === 1 && !/\s/.test(e.key)) palShow(e.key);
 });
 document.addEventListener("keyup", (e) => { flight.keys[e.key] = false; });
@@ -822,6 +851,7 @@ const WINDOW_BUILDINGS = {
   4: { x: 800, y: 152, w: 185, h: 228 },
   5: { x: 1030, y: 225, w: 170, h: 155 },
   6: { x: 1240, y: 250, w: 180, h: 130 },
+  7: { x: 1460, y: 190, w: 175, h: 190 },
 };
 
 function buildWindows() {
@@ -1121,16 +1151,166 @@ setInterval(fetchWeather, 15 * 60 * 1000);
 window.addEventListener("resize", () => { sizeWx(); buildSkyBits(); });
 if (prefersReduced()) drawWx(); else wxLoop();
 
-/* on phones the street is swipeable — start it centered, and make
-   the hint line a big friendly way into the index */
+/* on phones the street is swipeable — start it framing the car, and
+   make the hint line a big friendly way into the index */
 const skylineEl = document.getElementById("skyline");
-function centerSkyline() {
-  if (skylineEl.scrollWidth > skylineEl.clientWidth + 4) {
-    skylineEl.scrollLeft = (skylineEl.scrollWidth - skylineEl.clientWidth) / 2;
+setTimeout(followCar, 300);
+window.addEventListener("orientationchange", () => setTimeout(followCar, 400));
+
+/* ============================================================
+   THE CAR — the paper's street car. ← → drives it building to
+   building; arriving parks under a rooftop and opens it. Tapping
+   the car drives on to the next stop. Clicking a rooftop directly
+   sends the car over quietly, so it is always parked at whatever
+   you are reading.
+   ============================================================ */
+
+const CAR_STOPS = [
+  { open: "project-0", x: 125 },
+  { open: "project-1", x: 360 },
+  { open: "writing",   x: 635 },
+  { open: "project-2", x: 892 },
+  { open: "project-3", x: 1115 },
+  { open: "contact",   x: 1330 },
+  { open: "project-4", x: 1547 },
+];
+const VB_W = 1660;   // the skyline viewBox width
+
+const car = {
+  el: document.getElementById("car"),
+  rig: document.getElementById("car-rig"),
+  spokes: document.querySelectorAll("#car .spokes"),
+  idx: 2, x: CAR_STOPS[2].x,
+  dir: 1, vDir: 1, wheel: 0, lean: 0,
+  raf: 0, driving: false, touched: false,
+  tapDir: 1, lastNudge: 0, endToastAt: 0, userScrollAt: 0,
+};
+
+function placeCar() {
+  // vDir eases through zero on a turn, so the flip reads as a quick
+  // three-point turn instead of an instant mirror
+  const d = Math.max(0.08, Math.abs(car.vDir)) * (car.vDir < 0 ? -1 : 1);
+  car.el.setAttribute("transform", `translate(${car.x} 354)`);
+  car.rig.setAttribute("transform", `scale(${d} 1) rotate(${car.lean})`);
+  car.spokes.forEach((s) => s.setAttribute("transform", `rotate(${car.wheel})`));
+}
+
+/* keep the car in view when the street scrolls (phones), but never
+   fight a swipe the user is making themselves */
+function followCar() {
+  if (!car.driving && performance.now() - car.userScrollAt < 400) return;
+  if (skylineEl.scrollWidth <= skylineEl.clientWidth + 4) return;
+  const svg = skylineEl.querySelector("svg");
+  const px = (car.x / VB_W) * svg.clientWidth;
+  skylineEl.scrollLeft = Math.max(0, Math.min(px - skylineEl.clientWidth / 2,
+    skylineEl.scrollWidth - skylineEl.clientWidth));
+}
+skylineEl.addEventListener("scroll", () => {
+  if (!car.driving) car.userScrollAt = performance.now();
+}, { passive: true });
+
+function markCarStop(stop) {
+  document.querySelectorAll(".spot").forEach((s) =>
+    s.classList.toggle("car-here", s.dataset.open === stop.open));
+}
+
+const easeDrive = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+function spawnPuffs() {
+  if (prefersReduced()) return;
+  const NS = "http://www.w3.org/2000/svg";
+  for (let i = 0; i < 2; i++) {
+    const p = document.createElementNS(NS, "circle");
+    p.setAttribute("class", "puff");
+    p.setAttribute("cx", car.x - car.dir * (31 + i * 6));
+    p.setAttribute("cy", 348);
+    p.setAttribute("r", 2 + i);
+    car.el.parentNode.appendChild(p);
+    p.addEventListener("animationend", () => p.remove());
   }
 }
-setTimeout(centerSkyline, 300);
-window.addEventListener("orientationchange", () => setTimeout(centerSkyline, 400));
+
+function driveTo(idx, closeFirst) {
+  idx = Math.max(0, Math.min(CAR_STOPS.length - 1, idx));
+  const stop = CAR_STOPS[idx];
+  car.idx = idx;
+  cancelAnimationFrame(car.raf); car.raf = 0;
+  if (closeFirst) closeClip();
+  const from = car.x, dist = stop.x - from;
+  if (dist) car.dir = dist > 0 ? 1 : -1;
+  markCarStop(stop);   // the highlight tracks intent, not arrival
+  const arrive = () => {
+    car.x = stop.x; car.lean = 0; car.vDir = car.dir;
+    car.driving = false; car.raf = 0;
+    car.el.classList.remove("driving");
+    placeCar(); followCar();
+    if (closeFirst && !localStorage.getItem("carHint")) {
+      localStorage.setItem("carHint", "1");
+      toast("parked. click the rooftop — or press ↵ — to step inside.", "the street", "car");
+    }
+  };
+  if (!dist || prefersReduced()) { arrive(); return; }
+  car.driving = true;
+  car.el.classList.add("driving");
+  spawnPuffs();
+  const flipFrom = car.vDir;
+  const dur = Math.min(1000, 300 + Math.abs(dist) * 0.9);
+  const t0 = performance.now();
+  let lastStep = 0;
+  const loop = (now) => {
+    const t = Math.min(1, (now - t0) / dur);
+    const prev = car.x;
+    car.x = from + dist * easeDrive(t);
+    const step = Math.abs(car.x - prev);
+    car.wheel = (car.wheel + step * 9.55) % 360;   // slip-free roll for r=6
+    car.lean = Math.max(-3.5, Math.min(3.5, -(step - lastStep) * 4.5));
+    lastStep = step;
+    car.vDir = flipFrom + (car.dir - flipFrom) * Math.min(1, (now - t0) / 140);
+    if (t >= 1) { arrive(); return; }
+    placeCar(); followCar();
+    car.raf = requestAnimationFrame(loop);
+  };
+  car.raf = requestAnimationFrame(loop);
+}
+
+function driveCar(step) {
+  car.touched = true;
+  const next = Math.max(0, Math.min(CAR_STOPS.length - 1, car.idx + step));
+  if (next === car.idx) {
+    const now = performance.now();
+    if (now - car.endToastAt > 1500) {
+      car.endToastAt = now;
+      toast(step < 0
+        ? "that's the end of the block — nothing west but the bridge."
+        : "end of the street — nothing past here but the river.", "the street", "car");
+    }
+    return;
+  }
+  driveTo(next, true);
+}
+
+/* tapping the car cruises down the street, turning around at the ends */
+function nudgeCar() {
+  if (car.idx + car.tapDir < 0 || car.idx + car.tapDir >= CAR_STOPS.length) car.tapDir *= -1;
+  driveCar(car.tapDir);
+}
+car.el.addEventListener("click", nudgeCar);
+car.el.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); nudgeCar(); }
+});
+
+window.addEventListener("resize", () => { if (!car.driving) followCar(); });
+
+placeCar();
+markCarStop(CAR_STOPS[car.idx]);
+
+/* first visit only: one roll down the block and back, so the hint
+   line's "drive the street" is a demonstration, not a claim */
+if (!prefersReduced() && !localStorage.getItem("carSeen")) {
+  localStorage.setItem("carSeen", "1");
+  setTimeout(() => { if (!car.touched && !car.driving) driveTo(car.idx + 1, false); }, 1800);
+  setTimeout(() => { if (!car.touched) driveTo(2, false); }, 3200);
+}
 
 const hintLine = document.getElementById("hint-line");
 hintLine.addEventListener("click", () => palShow());

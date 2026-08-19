@@ -37,16 +37,16 @@
     <p class="dateline mono reveal"><span id="folio-date">…</span> · <span id="mast-wx">…</span> · <span id="edition">the evening post</span></p>
     <p class="standfirst reveal">Co-founder &amp; agentic engineer — building AI that delivers.</p>
     <p class="skyline-hint mono reveal" id="hint-line" role="button" tabindex="0" aria-label="Open the index">
-      <span class="hint-desktop">click a rooftop · or press <kbd>⌘K</kbd></span>
-      <span class="hint-mobile">tap a rooftop · swipe the street · or tap here</span>
+      <span class="hint-desktop">click a rooftop · <kbd>←</kbd><kbd>→</kbd> drive the street · or press <kbd>⌘K</kbd></span>
+      <span class="hint-mobile">tap a rooftop · tap the car to cruise · or tap here</span>
     </p>
   </header>
 
   <!-- ===== the skyline: content as geography ===== -->
-  <div class="skyline" id="skyline" aria-label="Astoria rooftops — the site's navigation">
-    <svg viewBox="0 0 1440 380" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <div class="skyline" id="skyline" role="group" aria-label="Astoria rooftops — the site's navigation">
+    <svg viewBox="0 0 1660 380" preserveAspectRatio="xMidYMax slice">
       <!-- back layer: distant blocks -->
-      <g class="far">
+      <g class="far" aria-hidden="true">
         <rect x="-20" y="150" width="180" height="240"/>
         <rect x="200" y="120" width="120" height="270"/>
         <rect x="440" y="140" width="150" height="250"/>
@@ -54,6 +54,8 @@
         <rect x="940" y="150" width="170" height="240"/>
         <rect x="1200" y="125" width="130" height="265"/>
         <rect x="1370" y="155" width="90" height="235"/>
+        <rect x="1490" y="130" width="140" height="260"/>
+        <rect x="1610" y="160" width="70" height="230"/>
       </g>
 
       <!-- near layer: the acting buildings -->
@@ -155,10 +157,47 @@
             <text class="stand-label" x="1330" y="230">THE POST</text>
           </g>
         </g>
+
+        <!-- b7: AX billboard — the on-device voice agent -->
+        <g class="spot" data-open="project-4" tabindex="0" role="button" aria-label="AX — on-device voice agent">
+          <rect class="bldg" x="1460" y="190" width="175" height="190"/>
+          <rect class="bldg" x="1600" y="178" width="18" height="12"/>
+          <g class="win" data-b="7"></g>
+          <line x1="1478" y1="190" x2="1478" y2="152"/>
+          <circle class="lamp" cx="1478" cy="149" r="3.4"/>
+          <g class="bb">
+            <line x1="1500" y1="190" x2="1500" y2="180"/>
+            <line x1="1610" y1="190" x2="1610" y2="180"/>
+            <rect class="board" x="1471" y="120" width="168" height="60"/>
+            <circle class="lamp" cx="1505" cy="114" r="4"/>
+            <circle class="lamp" cx="1555" cy="110" r="4"/>
+            <circle class="lamp" cx="1605" cy="114" r="4"/>
+            <text class="board-label" x="1555" y="148">AX</text>
+            <text class="board-sub" x="1555" y="166">on-device voice agent</text>
+          </g>
+        </g>
       </g>
 
       <!-- the street: grounds the whole composition -->
-      <rect class="street" x="0" y="354" width="1440" height="26"/>
+      <rect class="street" x="0" y="354" width="1660" height="26" aria-hidden="true"/>
+
+      <!-- the delivery car: ← → drives it building to building -->
+      <g class="car" id="car" tabindex="0" role="button" aria-label="The delivery car — drives the street between buildings">
+        <g class="car-rig" id="car-rig">
+          <polygon class="beam" points="27,-9 64,-2 64,-16"/>
+          <path class="car-body" d="M -30 -4 Q -33 -13 -23 -14 L -15 -15 Q -9 -25 0 -25 L 9 -25 Q 15 -25 17 -15 L 25 -14 Q 33 -13 30 -4 Z"/>
+          <path class="car-window" d="M -9 -16 Q -5 -22 0 -22 L 8 -22 Q 12 -22 13.5 -16 Z"/>
+          <circle class="headlight" cx="28" cy="-10" r="2.2"/>
+          <g class="wheel-g" transform="translate(-18,-6)">
+            <circle class="wheel" r="6"/>
+            <g class="spokes"><line x1="-3.6" y1="0" x2="3.6" y2="0"/><line x1="0" y1="-3.6" x2="0" y2="3.6"/></g>
+          </g>
+          <g class="wheel-g" transform="translate(18,-6)">
+            <circle class="wheel" r="6"/>
+            <g class="spokes"><line x1="-3.6" y1="0" x2="3.6" y2="0"/><line x1="0" y1="-3.6" x2="0" y2="3.6"/></g>
+          </g>
+        </g>
+      </g>
     </svg>
   </div>
 
