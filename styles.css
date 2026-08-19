@@ -148,7 +148,7 @@ kbd {
 .fg .fg-ground { fill: var(--grass); transition: fill 1.2s var(--ease); }
 .fg .grass-glint { fill: var(--leaf); opacity: .35; transition: fill 1.2s var(--ease); }
 .fg .shrub { fill: var(--leaf); transition: fill 1.2s var(--ease); }
-.fg .hydrant rect, .fg .hydrant circle { fill: var(--accent); }
+.hydrant rect, .hydrant circle { fill: var(--accent); }
 .fg .fence .pickets { stroke: var(--fg-ink); stroke-width: 26; stroke-dasharray: 3 25; }
 .fg .fence .rail { stroke: var(--fg-ink); stroke-width: 2.4; }
 .fg .bench-leg { stroke: var(--fg-ink); stroke-width: 3; }

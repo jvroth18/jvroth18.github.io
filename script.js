@@ -1254,7 +1254,8 @@ function driveTo(idx, closeFirst) {
   car.el.classList.add("driving");
   spawnPuffs();
   const flipFrom = car.vDir;
-  const dur = Math.min(1000, 300 + Math.abs(dist) * 0.9);
+  // leisurely: roughly the biplane's cruising pace, not a sports car
+  const dur = Math.min(3000, 600 + Math.abs(dist) * 2.2);
   const t0 = performance.now();
   let lastStep = 0;
   const loop = (now) => {
