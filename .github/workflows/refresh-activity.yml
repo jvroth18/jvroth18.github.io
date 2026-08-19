@@ -7,7 +7,7 @@ name: Refresh activity
 
 on:
   schedule:
-    - cron: "17 4,16 * * *"   # twice daily
+    - cron: "7 * * * *"    # hourly
   workflow_dispatch:
 
 jobs:
