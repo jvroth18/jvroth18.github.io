@@ -44,7 +44,7 @@
 
   <!-- ===== the skyline: content as geography ===== -->
   <div class="skyline" id="skyline" role="group" aria-label="Astoria rooftops — the site's navigation">
-    <svg viewBox="0 0 1660 380" preserveAspectRatio="xMidYMax slice">
+    <svg viewBox="0 0 1660 460" preserveAspectRatio="xMidYMax slice">
       <!-- back layer: distant blocks -->
       <g class="far" aria-hidden="true">
         <rect x="-20" y="150" width="180" height="240"/>
@@ -263,6 +263,54 @@
             <g class="spokes"><line x1="-3.6" y1="0" x2="3.6" y2="0"/><line x1="0" y1="-3.6" x2="0" y2="3.6"/></g>
           </g>
         </g>
+      </g>
+
+      <!-- foreground: the park strip below the street. Green — the
+           living edge of the scene — and deliberately sacrificial: an
+           overlaying dock/taskbar covers this band, never the street
+           or the car. -->
+      <g class="fg" aria-hidden="true">
+        <rect class="fg-ground" x="0" y="380" width="1660" height="80"/>
+        <rect class="grass-glint" x="0" y="380" width="1660" height="5"/>
+        <g class="fence">
+          <line class="pickets" x1="70" y1="408" x2="266" y2="408"/>
+          <line class="rail" x1="64" y1="398" x2="272" y2="398"/>
+          <line class="rail" x1="64" y1="412" x2="272" y2="412"/>
+        </g>
+        <g class="fence">
+          <line class="pickets" x1="640" y1="408" x2="836" y2="408"/>
+          <line class="rail" x1="634" y1="398" x2="842" y2="398"/>
+          <line class="rail" x1="634" y1="412" x2="842" y2="412"/>
+        </g>
+        <g class="fence">
+          <line class="pickets" x1="1245" y1="408" x2="1441" y2="408"/>
+          <line class="rail" x1="1239" y1="398" x2="1447" y2="398"/>
+          <line class="rail" x1="1239" y1="412" x2="1447" y2="412"/>
+        </g>
+        <!-- shrubs -->
+        <circle class="shrub" cx="295" cy="399" r="12"/><circle class="shrub" cx="308" cy="395" r="14"/><circle class="shrub" cx="321" cy="400" r="10"/>
+        <circle class="shrub" cx="1094" cy="398" r="12"/><circle class="shrub" cx="1107" cy="396" r="13"/>
+        <circle class="shrub" cx="1612" cy="397" r="12"/><circle class="shrub" cx="1626" cy="400" r="10"/>
+        <!-- hydrant, curbside by the fence line -->
+        <g class="hydrant">
+          <rect x="605" y="398" width="10" height="24" rx="3"/>
+          <circle cx="610" cy="397" r="4.5"/>
+          <rect x="600" y="404" width="20" height="4.5" rx="2"/>
+        </g>
+        <!-- bench, with the park cat on its backrest -->
+        <rect x="930" y="396" width="40" height="3.2" rx="1.6"/>
+        <rect x="928" y="407" width="44" height="3.6" rx="1.8"/>
+        <line class="bench-leg" x1="932" y1="396" x2="932" y2="428"/>
+        <line class="bench-leg" x1="968" y1="396" x2="968" y2="428"/>
+        <ellipse cx="947" cy="390.5" rx="4.5" ry="5.5"/>
+        <circle cx="944.5" cy="383" r="3.4"/>
+        <path d="M 942 381 L 941.5 377.7 L 944.2 379.5 Z"/>
+        <path d="M 945.6 379.7 L 947.6 377.3 L 947.9 380.7 Z"/>
+        <path class="cat-tail" d="M 951 395 Q 956.5 393.5 955.5 387"/>
+        <!-- mailbox -->
+        <path d="M 1500 414 L 1500 404 Q 1500 398 1506 398 L 1518 398 Q 1524 398 1524 404 L 1524 414 Z"/>
+        <line class="bench-leg" x1="1505" y1="414" x2="1505" y2="432"/>
+        <line class="bench-leg" x1="1519" y1="414" x2="1519" y2="432"/>
       </g>
     </svg>
   </div>
