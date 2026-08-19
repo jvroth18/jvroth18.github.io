@@ -98,7 +98,7 @@ const POSTS = [
 ];
 
 /* YTD GitHub contributions — refresh with: python3 update-activity.py */
-const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,90]}; // ACTIVITY-DATA
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,91]}; // ACTIVITY-DATA
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
@@ -479,12 +479,24 @@ function groundScreenY() {
 
 const CRASH_FIRE = ["#ffd23c", "#ffb03c", "#ff8a2e", "#ff6a2a", "#e2542c"];
 
-function crashFlight() {
+function crashFlight(big) {
   const f = flight;
+  const M = big ? 1.6 : 1;
   f.crashed = true; f.crashT = 0; f.bannerBox = null;
   f.crashX = f.x; f.crashY = Math.min(f.y, groundScreenY() - 6);
   f.particles = [];
-  for (let i = 0; i < 64; i++) {
+  // the fireball: a cluster of hot blooming cores that roll upward
+  for (let i = 0; i < Math.round(9 * M); i++) {
+    f.particles.push({
+      kind: "ball",
+      x: f.crashX + (Math.random() - 0.5) * 24 * M,
+      y: f.crashY - Math.random() * 12,
+      vx: (Math.random() - 0.5) * 0.5, vy: -0.5 - Math.random() * 0.9,
+      life: 1, r: (9 + Math.random() * 14) * M, grow: 0.35 + Math.random() * 0.35,
+    });
+  }
+  // debris sparks thrown clear of the ball
+  for (let i = 0; i < Math.round(40 * M); i++) {
     const a = Math.random() * Math.PI * 2, v = 1 + Math.random() * 5.5;
     f.particles.push({
       kind: "fire",
@@ -495,7 +507,10 @@ function crashFlight() {
     });
   }
   hud.textContent = "✈  DOWN — the street claims another aircraft";
-  toast("the delivery plane is down and burning on the street. a replacement is being gassed up.", "flight deck", "flight");
+  toast(big
+    ? "the plane came down on the delivery car. both are burning. the paper's insurers have been notified."
+    : "the delivery plane is down and burning on the street. a replacement is being gassed up.",
+    "flight deck", "flight");
   if (typeof scatterBirdsNear === "function") scatterBirdsNear(f.crashX);
 }
 
@@ -537,6 +552,8 @@ function stepFlight() {
       if (p.kind === "fire") {
         p.vy += 0.07; p.vx *= 0.96; p.life -= 0.02; p.r *= 0.985;
         if (p.y > g - 2) { p.y = g - 2; p.vy *= -0.35; p.vx *= 0.7; }
+      } else if (p.kind === "ball") {
+        p.r += p.grow; p.grow *= 0.982; p.vy *= 0.985; p.life -= 0.02;
       } else {
         p.vy -= 0.012; p.vx *= 0.99; p.life -= 0.007; p.r += 0.22;
       }
@@ -593,6 +610,13 @@ function stepFlight() {
 
     f.x += Math.cos(f.angle) * f.speed;
     f.y += Math.sin(f.angle) * f.speed;
+    // hitting the delivery car takes them both
+    if (!car.wrecked && typeof sceneToScreen === "function") {
+      const cp = sceneToScreen(car.x, 342);
+      if (Math.abs(f.x - cp.x) < 34 && f.y > cp.y - 22 && f.y < cp.y + 16) {
+        crashCar(); crashFlight(true); return;
+      }
+    }
     if (f.y >= groundScreenY() - 5) { crashFlight(); return; }
     const M = 200;
     const shift = (dx, dy) => {
@@ -718,7 +742,19 @@ function drawCrash(f) {
     ctx.restore();
   }
   f.particles.forEach((p) => {
-    if (p.kind === "fire") {
+    if (p.kind === "ball") {
+      // the classic fireball: white-hot core, orange body, dark red rim
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const a = Math.max(0, p.life);
+      const ball = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      ball.addColorStop(0, `rgba(255,240,180,${a})`);
+      ball.addColorStop(0.35, `rgba(255,160,50,${a * 0.9})`);
+      ball.addColorStop(0.75, `rgba(215,70,28,${a * 0.55})`);
+      ball.addColorStop(1, "rgba(120,30,10,0)");
+      ctx.fillStyle = ball;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    } else if (p.kind === "fire") {
       ctx.save(); ctx.globalCompositeOperation = "lighter";
       ctx.fillStyle = p.color;
       ctx.globalAlpha = Math.min(1, p.life * 1.4);
@@ -1447,7 +1483,7 @@ function driveTo(idx, closeFirst) {
   spawnPuffs();
   const flipFrom = car.vDir;
   // leisurely: roughly the biplane's cruising pace, not a sports car
-  const dur = Math.min(3000, 600 + Math.abs(dist) * 2.2);
+  const dur = Math.min(3800, 700 + Math.abs(dist) * 2.8);
   const t0 = performance.now();
   let lastStep = 0;
   const loop = (now) => {
@@ -1466,7 +1502,23 @@ function driveTo(idx, closeFirst) {
   car.raf = requestAnimationFrame(loop);
 }
 
+/* a wrecked car burns off in the fireball, then a replacement arrives */
+function crashCar() {
+  if (car.wrecked) return;
+  car.wrecked = true;
+  car.driving = false; car.el.classList.remove("driving");
+  cancelAnimationFrame(car.raf); car.raf = 0;
+  car.el.classList.add("wrecked");
+  setTimeout(() => {
+    car.el.classList.remove("wrecked");
+    car.wrecked = false;
+    placeCar();
+    toast("a replacement delivery car has arrived.", "the street", "car");
+  }, 5200);
+}
+
 function driveCar(step) {
+  if (car.wrecked) return;
   car.touched = true;
   const next = Math.max(0, Math.min(CAR_STOPS.length - 1, car.idx + step));
   if (next === car.idx) {
@@ -1537,7 +1589,7 @@ function chaseLoop() {
     }
     return;   // parked under the cursor; the next mousemove wakes it
   }
-  const step = prefersReduced() ? d : Math.max(-14, Math.min(14, d * 0.085));
+  const step = prefersReduced() ? d : Math.max(-8.5, Math.min(8.5, d * 0.06));
   if (Math.abs(d) > 3) car.dir = d > 0 ? 1 : -1;
   car.x += step;
   if (car.x > SCENE_W) {   // across the bridge — the street loops west
@@ -1555,6 +1607,7 @@ function chaseLoop() {
 }
 
 if (chaseCursor) skylineEl.addEventListener("mousemove", (e) => {
+  if (car.wrecked) return;
   chaseClientX = e.clientX;
   car.touched = true;
   cancelAnimationFrame(car.raf); car.raf = 0;   // the cursor overrides a scripted drive
@@ -1657,7 +1710,7 @@ let birdRaf = 0;
 
 function planFlight(b) {
   const pts = [];
-  const hops = 2 + Math.floor(Math.random() * 3);
+  const hops = 1 + Math.floor(Math.random() * 2);
   const ceiling = 60;
   const floor = groundScreenY() - 90;
   for (let i = 0; i < hops; i++) {
@@ -1678,7 +1731,7 @@ function flyBird(b, to) {
   b.flying = true; b.el.classList.add("flying");
   b.path = planFlight(b);
   b.wp = 0;
-  b.speed = randIn(1.9, 3.6);
+  b.speed = randIn(1.5, 2.7);
   activeBirds.add(b);
   if (!birdRaf) birdRaf = requestAnimationFrame(birdStep);
 }
@@ -1694,9 +1747,9 @@ function birdStep() {
     const sp = last && dist < 70 ? b.speed * Math.max(0.3, dist / 70) : b.speed;
     b.vx += ((dx / dist) * sp - b.vx) * 0.055;
     b.vy += ((dy / dist) * sp - b.vy) * 0.055;
-    // the wander: a constant small waver, and the odd whim
-    b.vy += Math.sin((b.sx + b.sy) * 0.04) * 0.06;
-    if (Math.random() < 0.025) { b.vx += randIn(-1, 1); b.vy += randIn(-0.8, 0.8); }
+    // the wander: a gentle waver, and the occasional whim
+    b.vy += Math.sin((b.sx + b.sy) * 0.04) * 0.04;
+    if (Math.random() < 0.01) { b.vx += randIn(-0.6, 0.6); b.vy += randIn(-0.5, 0.5); }
     b.sx += b.vx; b.sy += b.vy;
     if (Math.abs(b.vx) > 0.15) b.dir = b.vx < 0 ? -1 : 1;
     placeBird(b);
@@ -1736,7 +1789,7 @@ function scheduleBird(b) {
   b.timer = setTimeout(() => {
     if (!document.hidden && !prefersReduced() && !b.flying) flyBird(b, freePerch(b.x));
     scheduleBird(b);
-  }, night ? randIn(24000, 60000) : randIn(3000, 13000));
+  }, night ? randIn(30000, 75000) : randIn(9000, 26000));
 }
 birds.forEach(scheduleBird);
 

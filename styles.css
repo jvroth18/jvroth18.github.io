@@ -244,6 +244,8 @@ html[data-edition="evening"] .car .beam { opacity: .25; }
 /* a running engine brightens them — after dark only */
 html[data-edition="night"] .car.driving, html[data-edition="evening"] .car.driving { --car-lamp: rgba(255, 196, 110, .95); }
 .car:hover .car-body, .car:focus-visible .car-body { filter: brightness(1.12); }
+.car { transition: opacity 1.2s var(--ease); }
+.car.wrecked { opacity: 0; transition: opacity .25s; pointer-events: none; }
 .puff {
   fill: var(--ink-faint); opacity: .5;
   animation: puff .7s var(--ease) forwards;
