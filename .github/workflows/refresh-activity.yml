@@ -1,0 +1,36 @@
+name: Refresh activity
+
+# Keeps the front page's commit counter and composing-room heatmap live:
+# refreshes the ACTIVITY constant in script.js daily. update-activity.py
+# tries GraphQL with the workflow token, and falls back to the public
+# contributions page if that token can't read user contributions.
+
+on:
+  schedule:
+    - cron: "17 4,16 * * *"   # twice daily
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refresh ACTIVITY data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 update-activity.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add script.js
+          if git diff --cached --quiet; then
+            echo "no change — already current"
+          else
+            git commit -m "Refresh activity data"
+            git push
+          fi
