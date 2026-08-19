@@ -155,8 +155,8 @@ kbd {
 /* winter: the leaves are gone — bare trunks until spring */
 html[data-season="winter"] .tree circle { opacity: 0; }
 /* the birds: ink like the pigeons, clickable unlike the pigeons */
-#birds { pointer-events: auto; }
-.bird { cursor: pointer; }
+#bird-sky { position: fixed; inset: 0; z-index: 4; width: 100%; height: 100%; pointer-events: none; }
+.bird { cursor: pointer; pointer-events: auto; }
 .bird circle, .bird path { fill: var(--sky-ink); }
 .bird .wing { opacity: 0; }
 .bird.flying .wing {

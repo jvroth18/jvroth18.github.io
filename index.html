@@ -368,8 +368,6 @@
         </g>
       </g>
 
-      <!-- the birds: they live in the trees, populated by script -->
-      <g id="birds"></g>
 
       <!-- the delivery car: ← → drives it building to building -->
       <g class="car" id="car" tabindex="0" role="button" aria-label="The delivery car — drives the street between buildings">
@@ -453,6 +451,10 @@
       </g></g>
     </svg>
   </div>
+
+  <!-- the birds' sky: a full-viewport layer so they can soar through
+       the whitespace; their perches stay pinned to the trees below -->
+  <svg id="bird-sky" aria-hidden="true"></svg>
 
   <!-- ===== the clipping: content panel, newspaper-styled ===== -->
   <div class="clipping-layer" id="clipping-layer" hidden>

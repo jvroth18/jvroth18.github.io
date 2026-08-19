@@ -98,7 +98,7 @@ const POSTS = [
 ];
 
 /* YTD GitHub contributions — refresh with: python3 update-activity.py */
-const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,88]}; // ACTIVITY-DATA
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,90]}; // ACTIVITY-DATA
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
@@ -369,10 +369,9 @@ function flybyLane() {
   const mast = document.querySelector(".masthead");
   const town = document.getElementById("skyline");
   const top = (mast ? mast.getBoundingClientRect().bottom : innerHeight * 0.28) + 16;
-  // the plane prints in front of the city now, so the lane reaches down
-  // across the rooftops — never as low as the street
-  const townRect = town && town.getBoundingClientRect();
-  const bottom = townRect ? townRect.top + townRect.height * 0.45 : innerHeight * 0.52;
+  // the flyby lane is the clear whitespace between the masthead and the
+  // rooftops — the plane varies its height inside it, never over buildings
+  const bottom = (town ? town.getBoundingClientRect().top : innerHeight * 0.52) - 22;
   if (bottom - top < 24) {
     const mid = (top + bottom) / 2;
     return { top: mid - 12, bottom: mid + 12 };
@@ -426,8 +425,10 @@ function beginFlight(mode) {
   f.active = true; f.mode = mode;
   f.x = -220 - bannerWidth(b.text);
   const lane = flybyLane();
-  f.baseY = lane.top + (lane.bottom - lane.top) * (0.25 + Math.random() * 0.5);
+  f.baseY = lane.top + (lane.bottom - lane.top) * (0.15 + Math.random() * 0.7);
+  f.baseY2 = lane.top + (lane.bottom - lane.top) * (0.15 + Math.random() * 0.7);
   f.y = f.baseY;
+  f.camPx = null;
   f.angle = 0; f.speed = 2.4; f.throttle = 0.45; f.roll = 0; f.t = 0; f.stalled = false;
   f.crashed = false; f.crashT = 0;
   f.trail = []; f.particles = [];
@@ -502,6 +503,23 @@ function stepFlight() {
   const f = flight;
   f.t++;
 
+  // the plane lives in the world, not on the glass: when the camera pans
+  // the city, everything airborne pans with it — otherwise a drive makes
+  // the plane look like it's speeding up or falling behind
+  const svgEl = skylineEl && skylineEl.querySelector("svg");
+  if (svgEl) {
+    const camPx = cam.x * (svgEl.getBoundingClientRect().width / VB_W);
+    if (f.camPx !== null && f.camPx !== undefined && camPx !== f.camPx) {
+      const d = camPx - f.camPx;
+      f.x -= d;
+      if (f.crashX !== undefined) f.crashX -= d;
+      f.rope.forEach((p) => { p.x -= d; });
+      f.trail.forEach((p) => { p.x -= d; });
+      f.particles.forEach((p) => { p.x -= d; });
+    }
+    f.camPx = camPx;
+  }
+
   if (f.crashed) {
     // the wreck burns: fire falls and gutters, smoke feeds off it and rises
     f.trail.forEach((t) => (t.a *= 0.88));
@@ -530,9 +548,12 @@ function stepFlight() {
 
   if (f.mode === "auto") {
     f.speed = 2.2;
-    f.angle = Math.sin(f.t * 0.015) * 0.03;
     f.x += f.speed;
-    f.y = f.baseY + Math.sin(f.t * 0.02) * 6;
+    // altitude drifts from one height to another across the pass
+    const p = Math.min(1, Math.max(0, (f.x + 260) / (innerWidth + 520)));
+    const glide = p * p * (3 - 2 * p);   // smoothstep
+    f.y = f.baseY + (f.baseY2 - f.baseY) * glide + Math.sin(f.t * 0.02) * 6;
+    f.angle = Math.sin(f.t * 0.015) * 0.03 + ((f.baseY2 - f.baseY) / innerWidth) * 1.4;
     if (f.x > innerWidth + 260) { stopFlight(true); return; }
   } else {
     const turn = (f.keys.ArrowRight ? 1 : 0) - (f.keys.ArrowLeft ? 1 : 0);
@@ -1324,11 +1345,13 @@ const cam = {
   mid: document.getElementById("cam-mid"),
   near: document.getElementById("cam-near"),
 };
+let onCamMove = null;   // the birds hook in here to stay pinned to their trees
 function camApply() {
   if (!cam.near) return;   // stale cached markup without the camera groups
   cam.far.setAttribute("transform", `translate(${(-cam.x * 0.35).toFixed(2)} 0)`);
   cam.mid.setAttribute("transform", `translate(${(-cam.x * 0.6).toFixed(2)} 0)`);
   cam.near.setAttribute("transform", `translate(${(-cam.x).toFixed(2)} 0)`);
+  if (onCamMove) onCamMove();
 }
 function camLoop() {
   const d = cam.target - cam.x;
@@ -1545,12 +1568,16 @@ markCarStop(CAR_STOPS[car.idx]);
 camFollow();
 
 /* ============================================================
-   THE BIRDS — they live in the street trees. Click one and the
-   nearby flock startles to other trees; the car flushes them as
-   it drives past; at night they roost and sit still.
+   THE BIRDS — they roost in the street trees but they own the
+   whole sky. Each keeps its own clock, lifting off to wander
+   the whitespace in loops and whims before settling on a new
+   tree. They render on a fixed full-viewport layer in screen
+   pixels; their perches stay pinned to the scene through the
+   camera. Click one and the flock startles; the car flushes
+   them; after dark they mostly roost.
    ============================================================ */
 const BIRD_NS = "http://www.w3.org/2000/svg";
-const birdLayer = document.getElementById("birds");
+const birdSky = document.getElementById("bird-sky");
 const PERCHES = [];
 document.querySelectorAll(".deco .tree").forEach((t) => {
   const m = /translate\((-?[\d.]+)/.exec(t.getAttribute("transform"));
@@ -1560,16 +1587,38 @@ document.querySelectorAll(".deco .tree").forEach((t) => {
 });
 const birds = [];
 
+function sizeBirdSky() {
+  birdSky.setAttribute("viewBox", `0 0 ${innerWidth} ${innerHeight}`);
+}
+sizeBirdSky();
+
+function sceneToScreen(x, y) {
+  const svg = skylineEl.querySelector("svg");
+  const r = svg.getBoundingClientRect();
+  return { x: r.left + ((x - cam.x) / VB_W) * r.width, y: r.top + (y / 460) * r.height };
+}
+
 function freePerch(awayFromX) {
   const open = PERCHES.filter((p) => !p.taken &&
     Math.abs(p.x - (awayFromX ?? -1e4)) > 60);
   return open.length ? open[Math.floor(Math.random() * open.length)] : null;
 }
 
-function placeBird(b, dir) {
+function placeBird(b) {
   b.el.setAttribute("transform",
-    `translate(${b.x.toFixed(1)} ${b.y.toFixed(1)}) scale(${dir < 0 ? -1 : 1} 1)`);
+    `translate(${b.sx.toFixed(1)} ${b.sy.toFixed(1)}) scale(${b.dir < 0 ? -b.scale : b.scale} ${b.scale})`);
 }
+
+/* perched birds ride their trees when the camera pans */
+function settlePerched() {
+  birds.forEach((b) => {
+    if (b.flying || !b.perch) return;
+    const p = sceneToScreen(b.perch.x, b.perch.y);
+    b.sx = p.x; b.sy = p.y; placeBird(b);
+  });
+}
+onCamMove = settlePerched;
+window.addEventListener("resize", () => { sizeBirdSky(); settlePerched(); });
 
 function makeBird(i) {
   const g = document.createElementNS(BIRD_NS, "g");
@@ -1583,31 +1632,37 @@ function makeBird(i) {
     <path d="M 4.2 -1.9 L 6.1 -1.4 L 4.2 -0.9 Z"/>
     <path d="M -2.2 -0.6 L -5.6 1 L -2.6 1.7 Z"/>`;
   const perch = freePerch();
-  const b = { el: g, x: perch ? perch.x : 200 + i * 300, y: perch ? perch.y : 316,
-              perch, flying: false, raf: 0 };
+  const at = perch ? sceneToScreen(perch.x, perch.y)
+                   : { x: 100 + i * 150, y: innerHeight * 0.4 };
+  const b = { el: g, sx: at.x, sy: at.y, dir: i % 2 ? -1 : 1,
+              scale: 0.85 + Math.random() * 0.45,
+              perch, flying: false, vx: 0, vy: 0 };
   if (perch) perch.taken = b;
-  birdLayer.appendChild(g);
-  placeBird(b, i % 2 ? -1 : 1);
-  g.addEventListener("pointerdown", (e) => { e.stopPropagation(); startleBirds(b.x, 95); });
+  birdSky.appendChild(g);
+  placeBird(b);
+  g.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    if (b.perch) startleBirds(b.perch.x, 110);
+    else if (!b.flying) flyBird(b, freePerch());
+  });
   return b;
 }
 
-/* a flight is a wander, not a commute: a few airborne waypoints picked
-   at random, steered through with momentum and jitter, ending on a
-   perch — no two flights alike */
+/* a flight is a wander, not a commute: airborne waypoints scattered
+   across the whole viewport — masthead whitespace included — steered
+   through with momentum and whims, ending back on a tree */
 const randIn = (a, c) => a + Math.random() * (c - a);
 const activeBirds = new Set();
 let birdRaf = 0;
 
-function planFlight(b, to) {
+function planFlight(b) {
   const pts = [];
-  const hops = 1 + Math.floor(Math.random() * 3);
-  let x = b.x;
+  const hops = 2 + Math.floor(Math.random() * 3);
+  const ceiling = 60;
+  const floor = groundScreenY() - 90;
   for (let i = 0; i < hops; i++) {
-    x = Math.max(90, Math.min(SCENE_W - 240, x + randIn(-520, 520)));
-    pts.push({ x, y: randIn(110, 300) });
+    pts.push({ x: randIn(40, innerWidth - 40), y: randIn(ceiling, floor) });
   }
-  pts.push({ x: to.x, y: to.y });
   return pts;
 }
 
@@ -1616,14 +1671,14 @@ function flyBird(b, to) {
   if (b.perch) b.perch.taken = null;
   b.perch = to; to.taken = b;
   if (prefersReduced()) {
-    b.x = to.x; b.y = to.y; placeBird(b, to.x >= b.x ? 1 : -1);
+    const p = sceneToScreen(to.x, to.y);
+    b.sx = p.x; b.sy = p.y; placeBird(b);
     return;
   }
   b.flying = true; b.el.classList.add("flying");
-  b.path = planFlight(b, to);
+  b.path = planFlight(b);
   b.wp = 0;
-  b.speed = randIn(2.1, 3.6);
-  b.vx = b.vx || 0; b.vy = b.vy || 0;
+  b.speed = randIn(1.9, 3.6);
   activeBirds.add(b);
   if (!birdRaf) birdRaf = requestAnimationFrame(birdStep);
 }
@@ -1631,32 +1686,35 @@ function flyBird(b, to) {
 function birdStep() {
   birdRaf = 0;
   activeBirds.forEach((b) => {
-    const t = b.path[b.wp];
-    const last = b.wp === b.path.length - 1;
-    const dx = t.x - b.x, dy = t.y - b.y;
+    const last = b.wp >= b.path.length;
+    // the landing target is a moving one — the tree rides the camera
+    const t = last ? sceneToScreen(b.perch.x, b.perch.y) : b.path[b.wp];
+    const dx = t.x - b.sx, dy = t.y - b.sy;
     const dist = Math.hypot(dx, dy) || 1;
-    const sp = last && dist < 60 ? b.speed * Math.max(0.35, dist / 60) : b.speed;
-    b.vx += ((dx / dist) * sp - b.vx) * 0.06;
-    b.vy += ((dy / dist) * sp - b.vy) * 0.06;
+    const sp = last && dist < 70 ? b.speed * Math.max(0.3, dist / 70) : b.speed;
+    b.vx += ((dx / dist) * sp - b.vx) * 0.055;
+    b.vy += ((dy / dist) * sp - b.vy) * 0.055;
     // the wander: a constant small waver, and the odd whim
-    b.vy += Math.sin((b.x + b.y) * 0.05) * 0.05;
-    if (Math.random() < 0.02) { b.vx += randIn(-0.9, 0.9); b.vy += randIn(-0.7, 0.7); }
-    b.x += b.vx; b.y += b.vy;
-    placeBird(b, b.vx < -0.15 ? -1 : 1);
-    if (dist < (last ? 4 : 18)) {
+    b.vy += Math.sin((b.sx + b.sy) * 0.04) * 0.06;
+    if (Math.random() < 0.025) { b.vx += randIn(-1, 1); b.vy += randIn(-0.8, 0.8); }
+    b.sx += b.vx; b.sy += b.vy;
+    if (Math.abs(b.vx) > 0.15) b.dir = b.vx < 0 ? -1 : 1;
+    placeBird(b);
+    if (dist < (last ? 4 : 22)) {
       if (!last) { b.wp++; return; }
       b.flying = false; b.el.classList.remove("flying");
-      b.x = t.x; b.y = t.y; b.vx = 0; b.vy = 0;
-      placeBird(b, Math.random() < 0.5 ? -1 : 1);
+      b.sx = t.x; b.sy = t.y; b.vx = 0; b.vy = 0;
+      placeBird(b);
       activeBirds.delete(b);
     }
   });
   if (activeBirds.size) birdRaf = requestAnimationFrame(birdStep);
 }
 
-function startleBirds(x, radius) {
+function startleBirds(sceneX, radius) {
   birds.forEach((b) => {
-    if (!b.flying && Math.abs(b.x - x) < radius) flyBird(b, freePerch(b.x));
+    if (!b.flying && b.perch && Math.abs(b.perch.x - sceneX) < radius)
+      flyBird(b, freePerch(b.perch.x));
   });
 }
 
