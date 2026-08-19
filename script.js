@@ -98,7 +98,7 @@ const POSTS = [
 ];
 
 /* YTD GitHub contributions — refresh with: python3 update-activity.py */
-const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,36,19,35,8,29,17,37,23,13,29,57,60,25,24,44,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,28,26,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,58,49,98,3,104,81,27,25]}; // ACTIVITY-DATA
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,59,48,98,3,105,80,28,25]}; // ACTIVITY-DATA
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
@@ -265,7 +265,7 @@ const COMMANDS = [
   { id: "momentum", glyph: "§", label: "Momentum Surface", desc: "path-signature quant research", kw: "project quant", run: () => openClip("project-2") },
   { id: "tracker", glyph: "§", label: "tracker", desc: "open-source CLI", kw: "project oss", run: () => openClip("project-3") },
   { id: "ax", glyph: "§", label: "AX", desc: "on-device voice agent for iPhone", kw: "project phone voice local mlx qwen", run: () => openClip("project-4") },
-  { id: "drive", glyph: "»", label: "Drive the Street", desc: "← → cruise building to building", kw: "car navigate street", run: () => driveCar(1) },
+  { id: "drive", glyph: "»", label: "Drive the Street", desc: "the car chases your cursor — tap it to cruise", kw: "car navigate street", run: () => driveCar(1) },
   { id: "writing", glyph: "✎", label: "Dispatches", desc: "essays from the water tower", kw: "blog essays writing", run: () => openClip("writing") },
   { id: "contact", glyph: "@", label: "The Post", desc: "write to the editor", kw: "email correspondence", run: () => openClip("contact") },
   { id: "activity", glyph: "▦", label: "The Composing Room", desc: "YTD commit activity, live from GitHub", kw: "commits contributions development github activity", run: () => openClip("activity") },
@@ -344,14 +344,6 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (e.key === "Escape") { closeClip(); return; }
-  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-    e.preventDefault();
-    // coalesce OS key-repeat so a held arrow steps stop by stop
-    if (e.repeat && performance.now() - car.lastNudge < 220) return;
-    car.lastNudge = performance.now();
-    driveCar(e.key === "ArrowRight" ? 1 : -1);
-    return;
-  }
   if (e.key === "Enter" && document.activeElement === document.body) {
     e.preventDefault(); openClip(CAR_STOPS[car.idx].open);
     return;
@@ -1225,7 +1217,7 @@ const car = {
   idx: 2, x: CAR_STOPS[2].x,
   dir: 1, vDir: 1, wheel: 0, lean: 0,
   raf: 0, driving: false, touched: false,
-  tapDir: 1, lastNudge: 0, endToastAt: 0, userScrollAt: 0,
+  tapDir: 1, endToastAt: 0, userScrollAt: 0,
 };
 
 function placeCar() {
@@ -1278,6 +1270,7 @@ function driveTo(idx, closeFirst) {
   const stop = CAR_STOPS[idx];
   car.idx = idx;
   cancelAnimationFrame(car.raf); car.raf = 0;
+  if (typeof chaseRaf !== "undefined" && chaseRaf) { cancelAnimationFrame(chaseRaf); chaseRaf = 0; }
   if (closeFirst) closeClip();
   const from = car.x, dist = stop.x - from;
   if (dist) car.dir = dist > 0 ? 1 : -1;
@@ -1355,6 +1348,54 @@ car.el.addEventListener("pointerdown", () => {
 car.el.addEventListener("click", () => { if (!carWasHeld) nudgeCar(); });
 car.el.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); nudgeCar(); }
+});
+
+/* on cursor machines the car simply chases the mouse along the street —
+   point anywhere over the city and it drives there. push the cursor
+   toward the frame's edge and the camera rolls the block with you.
+   (touch keeps tap-to-cruise; there is no cursor to chase.) */
+const chaseCursor = matchMedia("(hover: hover) and (pointer: fine)").matches;
+let chaseClientX = null, chaseRaf = 0;
+
+function nearestStopIdx(x) {
+  let best = 0;
+  for (let i = 1; i < CAR_STOPS.length; i++)
+    if (Math.abs(CAR_STOPS[i].x - x) < Math.abs(CAR_STOPS[best].x - x)) best = i;
+  return best;
+}
+
+function chaseLoop() {
+  chaseRaf = 0;
+  const rect = skylineEl.querySelector("svg").getBoundingClientRect();
+  if (!rect.width) return;
+  const target = Math.max(60, Math.min(SCENE_W - 150,
+    ((chaseClientX - rect.left) / rect.width) * VB_W + cam.x));
+  const d = target - car.x;
+  if (Math.abs(d) < 0.6) {
+    if (car.driving) {
+      car.driving = false; car.el.classList.remove("driving");
+      car.lean = 0; car.vDir = car.dir; placeCar();
+    }
+    return;   // parked under the cursor; the next mousemove wakes it
+  }
+  const step = prefersReduced() ? d : Math.max(-14, Math.min(14, d * 0.085));
+  if (Math.abs(d) > 3) car.dir = d > 0 ? 1 : -1;
+  car.x += step;
+  car.wheel = (car.wheel + Math.abs(step) * 9.55) % 360;
+  car.vDir += (car.dir - car.vDir) * 0.2;
+  car.lean = Math.max(-3.5, Math.min(3.5, -step * 0.55));
+  if (!car.driving) { car.driving = true; car.el.classList.add("driving"); }
+  const near = nearestStopIdx(car.x);
+  if (near !== car.idx) { car.idx = near; markCarStop(CAR_STOPS[near]); }
+  placeCar(); followCar();
+  chaseRaf = requestAnimationFrame(chaseLoop);
+}
+
+if (chaseCursor) skylineEl.addEventListener("mousemove", (e) => {
+  chaseClientX = e.clientX;
+  car.touched = true;
+  cancelAnimationFrame(car.raf); car.raf = 0;   // the cursor overrides a scripted drive
+  if (!chaseRaf) chaseRaf = requestAnimationFrame(chaseLoop);
 });
 
 window.addEventListener("resize", () => { if (!car.driving) followCar(); });
