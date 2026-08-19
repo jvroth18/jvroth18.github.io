@@ -116,9 +116,24 @@ kbd {
    crops equally at the sides instead of losing its rooftops */
 .skyline svg { width: max(100%, 1268px); flex: none; height: auto; display: block; }
 
-/* two depths of distance for atmospheric perspective */
+/* three depths of distance for atmospheric perspective */
 .far rect { fill: var(--sky-ink); opacity: .1; }
 .far rect:nth-child(even) { opacity: .22; }
+.mid { opacity: .38; }
+.mid rect, .mid path { fill: var(--sky-ink); }
+.mid line { stroke: var(--sky-ink); stroke-width: 3; }
+
+/* rooftop + street dressing, all in the near ink */
+.roof-deco rect, .roof-deco .pigeon circle { fill: var(--sky-ink); }
+.roof-deco .wire { stroke: var(--sky-ink); stroke-width: 1.6; fill: none; }
+.deco { pointer-events: none; }
+.deco .curb { fill: var(--paper); opacity: .16; }
+.deco .lane { stroke: var(--paper); opacity: .2; stroke-width: 2; stroke-dasharray: 16 18; }
+.lamp-post .post { stroke: var(--sky-ink); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.lamp-post .lamp-bulb { fill: var(--paper); opacity: .55; }
+.lamp-post .lamp-glow { fill: var(--lamp); opacity: .45; transition: fill 1s var(--ease); }
+.tree line { stroke: var(--sky-ink); stroke-width: 4; }
+.tree circle { fill: var(--sky-ink); }
 
 .street { fill: var(--sky-ink); }
 .flag { fill: var(--accent); }
