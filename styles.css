@@ -71,7 +71,7 @@ kbd {
 
 /* ============ Scene layers ============ */
 #weather { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
-#sky     { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+#sky     { position: fixed; inset: 0; z-index: 5; width: 100%; height: 100%; pointer-events: none; } /* the plane flies in front of the city */
 
 /* ============ Masthead in the sky ============ */
 .masthead {
@@ -134,7 +134,11 @@ kbd {
 .roof-deco rect, .roof-deco .pigeon circle { fill: var(--sky-ink); }
 .roof-deco .wire { stroke: var(--sky-ink); stroke-width: 1.6; fill: none; }
 .deco { pointer-events: none; }
-.rail-end line { stroke: var(--sky-ink); stroke-width: 3.5; stroke-linecap: round; }
+.bridge line, .bridge path { stroke: var(--sky-ink); stroke-width: 3; fill: none; stroke-linecap: round; }
+.bridge .tower { stroke-width: 7; }
+.bridge .cable { stroke-width: 4; }
+.bridge .deck-rail { stroke-width: 2.4; }
+.bridge rect { fill: var(--sky-ink); }
 .fg .river rect { fill: var(--sky-ink); opacity: .55; }
 .fg .river line { stroke: var(--paper); stroke-width: 2; opacity: .3; stroke-linecap: round; }
 .deco .curb { fill: var(--paper); opacity: .16; }
@@ -143,7 +147,20 @@ kbd {
 .lamp-post .lamp-bulb { fill: var(--paper); opacity: .55; }
 .lamp-post .lamp-glow { fill: var(--lamp); opacity: .45; transition: fill 1s var(--ease); }
 .tree line { stroke: var(--sky-ink); stroke-width: 4; }
-.tree circle { fill: var(--leaf); transition: fill 1.2s var(--ease); }
+.tree circle { fill: var(--leaf); transition: fill 1.2s var(--ease), opacity 1.2s var(--ease); }
+.tree circle:nth-of-type(2) { fill: var(--leaf-2, var(--leaf)); }
+/* winter: the leaves are gone — bare trunks until spring */
+html[data-season="winter"] .tree circle { opacity: 0; }
+/* the birds: ink like the pigeons, clickable unlike the pigeons */
+#birds { pointer-events: auto; }
+.bird { cursor: pointer; }
+.bird circle, .bird path { fill: var(--sky-ink); }
+.bird .wing { opacity: 0; }
+.bird.flying .wing {
+  opacity: 1; transform-box: fill-box; transform-origin: 50% 100%;
+  animation: bird-flap .24s infinite alternate ease-in-out;
+}
+@keyframes bird-flap { from { transform: scaleY(.35); } to { transform: scaleY(1.2); } }
 
 /* the foreground park strip: the scene's living green edge */
 .fg { pointer-events: none; }
@@ -151,6 +168,7 @@ kbd {
 .fg .fg-ground { fill: var(--grass); transition: fill 1.2s var(--ease); }
 .fg .grass-glint { fill: var(--leaf); opacity: .35; transition: fill 1.2s var(--ease); }
 .fg .shrub { fill: var(--leaf); transition: fill 1.2s var(--ease); }
+.fg .shrub-b { fill: var(--leaf-2, var(--leaf)); }
 .hydrant rect, .hydrant circle { fill: var(--accent); }
 .fg .fence .pickets { stroke: var(--fg-ink); stroke-width: 26; stroke-dasharray: 3 25; }
 .fg .fence .rail { stroke: var(--fg-ink); stroke-width: 2.4; }
@@ -211,14 +229,17 @@ kbd {
 .car .car-window { fill: var(--paper); opacity: .9; }
 .car .wheel { fill: var(--sky-ink); }
 .car .spokes line { stroke: var(--paper); stroke-width: 1.4; opacity: .7; }
-.car .headlight { fill: var(--car-lamp, var(--lamp)); transition: fill 1s var(--ease); }
-.car .beam { fill: var(--car-lamp, var(--lamp)); opacity: .25; transition: fill 1s var(--ease); }
-/* headlights flick on whenever the engine is running, whatever the hour */
-.car.driving { --car-lamp: rgba(255, 196, 110, .75); }
-/* and after dark they stay on, parked or not */
+/* headlights are for after dark — daylight keeps them off entirely */
+.car .headlight { fill: var(--car-lamp, var(--lamp)); opacity: 0; transition: fill 1s var(--ease), opacity 1s var(--ease); }
+.car .beam { fill: var(--car-lamp, var(--lamp)); opacity: 0; transition: fill 1s var(--ease), opacity 1s var(--ease); }
 html[data-edition="night"] .car { --car-lamp: rgba(255, 205, 120, .95); }
+html[data-edition="night"] .car .headlight { opacity: 1; }
 html[data-edition="night"] .car .beam { opacity: .4; }
 html[data-edition="evening"] .car { --car-lamp: rgba(255, 205, 120, .7); }
+html[data-edition="evening"] .car .headlight { opacity: 1; }
+html[data-edition="evening"] .car .beam { opacity: .25; }
+/* a running engine brightens them — after dark only */
+html[data-edition="night"] .car.driving, html[data-edition="evening"] .car.driving { --car-lamp: rgba(255, 196, 110, .95); }
 .car:hover .car-body, .car:focus-visible .car-body { filter: brightness(1.12); }
 .puff {
   fill: var(--ink-faint); opacity: .5;

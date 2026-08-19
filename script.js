@@ -98,7 +98,7 @@ const POSTS = [
 ];
 
 /* YTD GitHub contributions — refresh with: python3 update-activity.py */
-const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,36,19,35,8,29,17,37,23,13,29,57,60,25,24,44,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,28,26,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,60,53,98,3,104,105,55,84]}; // ACTIVITY-DATA
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,85]}; // ACTIVITY-DATA
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
@@ -369,7 +369,10 @@ function flybyLane() {
   const mast = document.querySelector(".masthead");
   const town = document.getElementById("skyline");
   const top = (mast ? mast.getBoundingClientRect().bottom : innerHeight * 0.28) + 16;
-  const bottom = (town ? town.getBoundingClientRect().top : innerHeight * 0.52) - 22;
+  // the plane prints in front of the city now, so the lane reaches down
+  // across the rooftops — never as low as the street
+  const townRect = town && town.getBoundingClientRect();
+  const bottom = townRect ? townRect.top + townRect.height * 0.45 : innerHeight * 0.52;
   if (bottom - top < 24) {
     const mid = (top + bottom) / 2;
     return { top: mid - 12, bottom: mid + 12 };
@@ -426,6 +429,7 @@ function beginFlight(mode) {
   f.baseY = lane.top + (lane.bottom - lane.top) * (0.25 + Math.random() * 0.5);
   f.y = f.baseY;
   f.angle = 0; f.speed = 2.4; f.throttle = 0.45; f.roll = 0; f.t = 0; f.stalled = false;
+  f.crashed = false; f.crashT = 0;
   f.trail = []; f.particles = [];
   initRope(f);
   sizeSky();
@@ -464,9 +468,46 @@ function stopFlight(silent) {
   if (!silent && f.mode === "manual") toast("landed.", "flight deck", "flight");
 }
 
+/* the street, in screen pixels — the hard deck a manual flight must respect */
+function groundScreenY() {
+  const svg = document.querySelector("#skyline svg");
+  if (!svg) return innerHeight - 40;
+  const r = svg.getBoundingClientRect();
+  return r.top + (354 / 460) * r.height;
+}
+
+function crashFlight() {
+  const f = flight;
+  f.crashed = true; f.crashT = 0; f.bannerBox = null;
+  const accent = cssVar("--accent") || "#c14a2e";
+  for (let i = 0; i < 30; i++) {
+    const a = Math.random() * Math.PI * 2, v = 1.5 + Math.random() * 4;
+    f.particles.push({
+      x: f.x + (Math.random() - 0.5) * 10, y: f.y + (Math.random() - 0.5) * 6,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.6,
+      life: 0.9 + Math.random() * 0.5, r: 1.5 + Math.random() * 3.5,
+      color: Math.random() < 0.45 ? accent : null,
+    });
+  }
+  hud.textContent = "✈  DOWN — the street claims another aircraft";
+  toast("the delivery plane is down on the street. a replacement is being gassed up.", "flight deck", "flight");
+  if (typeof scatterBirdsNear === "function") scatterBirdsNear(f.x);
+}
+
 function stepFlight() {
   const f = flight;
   f.t++;
+
+  if (f.crashed) {
+    // the wreck: debris settles, then the sky clears for the next plane
+    f.particles.forEach((p) => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.vx *= 0.97;
+      p.life -= 0.016; p.r += 0.1;
+    });
+    f.particles = f.particles.filter((p) => p.life > 0);
+    if (++f.crashT > 110) { f.crashed = false; stopFlight(true); }
+    return;
+  }
 
   if (f.mode === "auto") {
     f.speed = 2.2;
@@ -512,6 +553,7 @@ function stepFlight() {
 
     f.x += Math.cos(f.angle) * f.speed;
     f.y += Math.sin(f.angle) * f.speed;
+    if (f.y >= groundScreenY() - 5) { crashFlight(); return; }
     const M = 200;
     const shift = (dx, dy) => {
       f.rope.forEach((p) => { p.x += dx; p.y += dy; });
@@ -523,11 +565,8 @@ function stepFlight() {
     if (f.y < -M) { f.y += innerHeight + 2 * M; shift(0, innerHeight + 2 * M); }
     if (f.y > innerHeight + M) { f.y -= innerHeight + 2 * M; shift(0, -(innerHeight + 2 * M)); }
 
-    // a long manual flight tows the whole rotation, one headline at a time
-    if (f.t % 360 === 0) {
-      const b = nextBanner();
-      f.bannerText = b.text; f.bannerOpen = b.open;
-    }
+    // the headline only changes between flights — a banner is sewn on
+    // at takeoff and stays put until the plane leaves the sky
   }
 
   let prev = { x: f.x - Math.cos(f.angle) * TAIL, y: f.y - Math.sin(f.angle) * TAIL };
@@ -597,12 +636,13 @@ function drawFlight() {
   ctx.globalAlpha = 1;
 
   f.particles.forEach((p) => {
-    ctx.fillStyle = faint;
-    ctx.globalAlpha = p.life * 0.45;
+    ctx.fillStyle = p.color || faint;
+    ctx.globalAlpha = p.life * (p.color ? 0.8 : 0.45);
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
   });
   ctx.globalAlpha = 1;
 
+  if (f.crashed) return;   // nothing left to draw but the debris
   drawBannerRope(f);
   drawBiplane(f, accent);
 }
@@ -842,7 +882,33 @@ function setEdition() {
     root.dataset.edition = ed;
     document.getElementById("edition").textContent = `the ${ed} edition`;
     lightWindows(ed);
+    applyFoliage(ed);
   }
+}
+
+/* ---- the seasons: foliage follows the month, the edition dims it.
+   winter drops the leaves entirely (see [data-season] in the css) ---- */
+const FOLIAGE = {
+  spring: { leaf: "#6f9e4b", leaf2: "#90b35c", grass: "#315227" },
+  summer: { leaf: "#5b8746", leaf2: "#4d7a3e", grass: "#2b4423" },
+  autumn: { leaf: "#c47a2e", leaf2: "#a2542a", grass: "#56552e" },
+  winter: { leaf: "#7a6a4f", leaf2: "#6b5b43", grass: "#3f4237" },
+};
+const seasonOf = (m) => (m >= 2 && m <= 4 ? "spring" : m >= 5 && m <= 7 ? "summer"
+  : m >= 8 && m <= 10 ? "autumn" : "winter");
+function shadeHex(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = (v) => Math.round(Math.max(0, Math.min(255, v * k))).toString(16).padStart(2, "0");
+  return "#" + c(n >> 16) + c((n >> 8) & 255) + c(n & 255);
+}
+function applyFoliage(edition) {
+  const season = seasonOf(new Date().getMonth());
+  root.dataset.season = season;
+  const k = edition === "night" ? 0.62 : edition === "evening" || edition === "morning" ? 0.84 : 1;
+  const f = FOLIAGE[season];
+  root.style.setProperty("--leaf", shadeHex(f.leaf, k));
+  root.style.setProperty("--leaf-2", shadeHex(f.leaf2, k));
+  root.style.setProperty("--grass", shadeHex(f.grass, k));
 }
 setInterval(setEdition, 60000);
 
@@ -1180,8 +1246,10 @@ const CAR_STOPS = [
   { open: "project-4", x: 1547 },
   { open: "project-5", x: 1785 },
 ];
-const VB_W = 1660;    // the skyline viewBox (camera frame) width
-const SCENE_W = 2200; // the street runs past the frame, east to the river
+const VB_W = 1660;     // the skyline viewBox (camera frame) width
+const SCENE_W = 2560;  // the street runs east over the river, across the bridge
+const CAM_EDGE = 2380; // the camera never shows the bridge's far end — the
+                       // wrap back to the west side happens off-frame
 
 /* ---- the camera: the frame follows the car down the block, the
    back ranks sliding slower than the street — a paper diorama ---- */
@@ -1205,7 +1273,7 @@ function camLoop() {
   cam.raf = requestAnimationFrame(camLoop);
 }
 function camFollow() {
-  cam.target = Math.max(0, Math.min(SCENE_W - VB_W, car.x - VB_W / 2));
+  cam.target = Math.max(0, Math.min(CAM_EDGE - VB_W, car.x - VB_W / 2));
   if (prefersReduced()) { cam.x = cam.target; camApply(); return; }
   if (!cam.raf) cam.raf = requestAnimationFrame(camLoop);
 }
@@ -1319,7 +1387,7 @@ function driveCar(step) {
       car.endToastAt = now;
       toast(step < 0
         ? "that's the end of the block — nothing west but the bridge."
-        : "end of the street — nothing past here but the river.", "the street", "car");
+        : "last stop — past here the bridge loops the street back west.", "the street", "car");
     }
     return;
   }
@@ -1368,8 +1436,11 @@ function chaseLoop() {
   chaseRaf = 0;
   const rect = skylineEl.querySelector("svg").getBoundingClientRect();
   if (!rect.width) return;
-  const target = Math.max(60, Math.min(SCENE_W - 150,
+  let target = Math.max(60, Math.min(SCENE_W - 150,
     ((chaseClientX - rect.left) / rect.width) * VB_W + cam.x));
+  // once the car is well onto the bridge and still being pushed east,
+  // it commits to the crossing — over the river and around to the west
+  if (car.x > 2300 && target > 2280) target = SCENE_W + 70;
   const d = target - car.x;
   if (Math.abs(d) < 0.6) {
     if (car.driving) {
@@ -1381,6 +1452,10 @@ function chaseLoop() {
   const step = prefersReduced() ? d : Math.max(-14, Math.min(14, d * 0.085));
   if (Math.abs(d) > 3) car.dir = d > 0 ? 1 : -1;
   car.x += step;
+  if (car.x > SCENE_W) {   // across the bridge — the street loops west
+    car.x = -70;
+    cam.x = cam.target = 0; camApply();
+  }
   car.wheel = (car.wheel + Math.abs(step) * 9.55) % 360;
   car.vDir += (car.dir - car.vDir) * 0.2;
   car.lean = Math.max(-3.5, Math.min(3.5, -step * 0.55));
@@ -1403,6 +1478,109 @@ window.addEventListener("resize", () => { if (!car.driving) followCar(); });
 placeCar();
 markCarStop(CAR_STOPS[car.idx]);
 camFollow();
+
+/* ============================================================
+   THE BIRDS — they live in the street trees. Click one and the
+   nearby flock startles to other trees; the car flushes them as
+   it drives past; at night they roost and sit still.
+   ============================================================ */
+const BIRD_NS = "http://www.w3.org/2000/svg";
+const birdLayer = document.getElementById("birds");
+const PERCHES = [];
+document.querySelectorAll(".deco .tree").forEach((t) => {
+  const m = /translate\((-?[\d.]+)/.exec(t.getAttribute("transform"));
+  if (!m) return;
+  [-9, 0, 9].forEach((dx, i) =>
+    PERCHES.push({ x: +m[1] + dx, y: i === 1 ? 312 : 318, taken: null }));
+});
+const birds = [];
+
+function freePerch(awayFromX) {
+  const open = PERCHES.filter((p) => !p.taken &&
+    Math.abs(p.x - (awayFromX ?? -1e4)) > 60);
+  return open.length ? open[Math.floor(Math.random() * open.length)] : null;
+}
+
+function placeBird(b, dir) {
+  b.el.setAttribute("transform",
+    `translate(${b.x.toFixed(1)} ${b.y.toFixed(1)}) scale(${dir < 0 ? -1 : 1} 1)`);
+}
+
+function makeBird(i) {
+  const g = document.createElementNS(BIRD_NS, "g");
+  g.setAttribute("class", "bird");
+  g.setAttribute("role", "img");
+  g.setAttribute("aria-label", "a bird");
+  g.innerHTML = `
+    <path class="wing" d="M -3.5 -3 Q 0 -9.5 3.5 -3 Z"/>
+    <circle r="2.6"/>
+    <circle cx="2.8" cy="-1.6" r="1.5"/>
+    <path d="M 4.2 -1.9 L 6.1 -1.4 L 4.2 -0.9 Z"/>
+    <path d="M -2.2 -0.6 L -5.6 1 L -2.6 1.7 Z"/>`;
+  const perch = freePerch();
+  const b = { el: g, x: perch ? perch.x : 200 + i * 300, y: perch ? perch.y : 316,
+              perch, flying: false, raf: 0 };
+  if (perch) perch.taken = b;
+  birdLayer.appendChild(g);
+  placeBird(b, i % 2 ? -1 : 1);
+  g.addEventListener("pointerdown", (e) => { e.stopPropagation(); startleBirds(b.x, 95); });
+  return b;
+}
+
+function flyBird(b, to) {
+  if (b.flying || !to) return;
+  if (b.perch) b.perch.taken = null;
+  b.perch = to; to.taken = b;
+  b.flying = true; b.el.classList.add("flying");
+  const from = { x: b.x, y: b.y };
+  const dist = Math.hypot(to.x - from.x, to.y - from.y);
+  const dur = prefersReduced() ? 1 : Math.max(40, Math.min(150, dist / 3.2));
+  const lift = Math.min(90, 30 + dist * 0.18);
+  const dir = to.x >= from.x ? 1 : -1;
+  let t = 0;
+  const step = () => {
+    t++;
+    const u = Math.min(1, t / dur), v = 1 - u;
+    b.x = v * v * from.x + 2 * v * u * ((from.x + to.x) / 2) + u * u * to.x;
+    b.y = v * v * from.y + 2 * v * u * (Math.min(from.y, to.y) - lift) + u * u * to.y;
+    placeBird(b, dir);
+    if (u < 1) { b.raf = requestAnimationFrame(step); return; }
+    b.flying = false; b.el.classList.remove("flying");
+    b.x = to.x; b.y = to.y; placeBird(b, dir);
+  };
+  cancelAnimationFrame(b.raf);
+  b.raf = requestAnimationFrame(step);
+}
+
+function startleBirds(x, radius) {
+  birds.forEach((b) => {
+    if (!b.flying && Math.abs(b.x - x) < radius) flyBird(b, freePerch(b.x));
+  });
+}
+
+/* the crash site clears its trees — screen x in, scene x out */
+function scatterBirdsNear(screenX) {
+  const svg = skylineEl.querySelector("svg");
+  if (!svg) return;
+  const r = svg.getBoundingClientRect();
+  startleBirds(((screenX - r.left) / r.width) * VB_W + cam.x, 220);
+}
+
+for (let i = 0; i < 6; i++) birds.push(makeBird(i));
+
+/* ambient life: now and then one moves along — except after dark */
+setInterval(() => {
+  if (document.hidden || prefersReduced() || root.dataset.edition === "night") return;
+  if (Math.random() < 0.4) {
+    const b = birds[Math.floor(Math.random() * birds.length)];
+    if (!b.flying) flyBird(b, freePerch(b.x));
+  }
+}, 5000);
+
+/* the car flushes whatever it drives under */
+setInterval(() => {
+  if (car.driving) startleBirds(car.x + car.dir * 30, 55);
+}, 250);
 
 /* first visit only: one roll down the block and back, so the hint
    line's "drive the street" is a demonstration, not a claim */
