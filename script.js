@@ -864,6 +864,7 @@ const WINDOW_BUILDINGS = {
   5: { x: 1030, y: 225, w: 170, h: 155 },
   6: { x: 1240, y: 250, w: 180, h: 130 },
   7: { x: 1460, y: 190, w: 175, h: 190 },
+  8: { x: 1690, y: 200, w: 190, h: 180 },
 };
 
 function buildWindows() {
@@ -1185,8 +1186,37 @@ const CAR_STOPS = [
   { open: "project-3", x: 1115 },
   { open: "contact",   x: 1330 },
   { open: "project-4", x: 1547 },
+  { open: "project-5", x: 1785 },
 ];
-const VB_W = 1660;   // the skyline viewBox width
+const VB_W = 1660;    // the skyline viewBox (camera frame) width
+const SCENE_W = 2200; // the street runs past the frame, east to the river
+
+/* ---- the camera: the frame follows the car down the block, the
+   back ranks sliding slower than the street — a paper diorama ---- */
+const cam = {
+  x: 0, target: 0, raf: 0,
+  far: document.getElementById("cam-far"),
+  mid: document.getElementById("cam-mid"),
+  near: document.getElementById("cam-near"),
+};
+function camApply() {
+  if (!cam.near) return;   // stale cached markup without the camera groups
+  cam.far.setAttribute("transform", `translate(${(-cam.x * 0.35).toFixed(2)} 0)`);
+  cam.mid.setAttribute("transform", `translate(${(-cam.x * 0.6).toFixed(2)} 0)`);
+  cam.near.setAttribute("transform", `translate(${(-cam.x).toFixed(2)} 0)`);
+}
+function camLoop() {
+  const d = cam.target - cam.x;
+  if (Math.abs(d) < 0.4) { cam.x = cam.target; camApply(); cam.raf = 0; return; }
+  cam.x += d * 0.07;
+  camApply();
+  cam.raf = requestAnimationFrame(camLoop);
+}
+function camFollow() {
+  cam.target = Math.max(0, Math.min(SCENE_W - VB_W, car.x - VB_W / 2));
+  if (prefersReduced()) { cam.x = cam.target; camApply(); return; }
+  if (!cam.raf) cam.raf = requestAnimationFrame(camLoop);
+}
 
 const car = {
   el: document.getElementById("car"),
@@ -1210,10 +1240,11 @@ function placeCar() {
 /* keep the car in view when the street scrolls (phones), but never
    fight a swipe the user is making themselves */
 function followCar() {
+  camFollow();
   if (!car.driving && performance.now() - car.userScrollAt < 400) return;
   if (skylineEl.scrollWidth <= skylineEl.clientWidth + 4) return;
   const svg = skylineEl.querySelector("svg");
-  const px = (car.x / VB_W) * svg.clientWidth;
+  const px = ((car.x - cam.x) / VB_W) * svg.clientWidth;
   skylineEl.scrollLeft = Math.max(0, Math.min(px - skylineEl.clientWidth / 2,
     skylineEl.scrollWidth - skylineEl.clientWidth));
 }
@@ -1307,7 +1338,21 @@ function nudgeCar() {
   if (car.idx + car.tapDir < 0 || car.idx + car.tapDir >= CAR_STOPS.length) car.tapDir *= -1;
   driveCar(car.tapDir);
 }
-car.el.addEventListener("click", nudgeCar);
+/* press-and-hold keeps it rolling stop to stop; a quick tap is one nudge.
+   taps land mid-drive too — each one sends the car a stop further. */
+let carHoldT = 0, carWasHeld = false;
+car.el.addEventListener("pointerdown", () => {
+  carWasHeld = false;
+  clearTimeout(carHoldT);
+  carHoldT = setTimeout(function cruise() {
+    carWasHeld = true;
+    nudgeCar();
+    carHoldT = setTimeout(cruise, 520);
+  }, 320);
+});
+["pointerup", "pointercancel", "pointerleave"].forEach((ev) =>
+  car.el.addEventListener(ev, () => clearTimeout(carHoldT)));
+car.el.addEventListener("click", () => { if (!carWasHeld) nudgeCar(); });
 car.el.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); nudgeCar(); }
 });
@@ -1316,6 +1361,7 @@ window.addEventListener("resize", () => { if (!car.driving) followCar(); });
 
 placeCar();
 markCarStop(CAR_STOPS[car.idx]);
+camFollow();
 
 /* first visit only: one roll down the block and back, so the hint
    line's "drive the street" is a demonstration, not a claim */
