@@ -1,13 +1,13 @@
 name: Refresh activity
 
 # Keeps the front page's commit counter and composing-room heatmap live:
-# refreshes the ACTIVITY constant in script.js daily. update-activity.py
+# refreshes the ACTIVITY constant in script.js once a day. update-activity.py
 # tries GraphQL with the workflow token, and falls back to the public
 # contributions page if that token can't read user contributions.
 
 on:
   schedule:
-    - cron: "7 * * * *"    # hourly
+    - cron: "17 8 * * *"   # daily, ~4:17am ET — the overnight edition
   workflow_dispatch:
 
 jobs:
