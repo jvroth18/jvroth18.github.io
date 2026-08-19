@@ -1483,7 +1483,7 @@ function driveTo(idx, closeFirst) {
   spawnPuffs();
   const flipFrom = car.vDir;
   // leisurely: roughly the biplane's cruising pace, not a sports car
-  const dur = Math.min(3800, 700 + Math.abs(dist) * 2.8);
+  const dur = Math.min(5000, 800 + Math.abs(dist) * 3.6);
   const t0 = performance.now();
   let lastStep = 0;
   const loop = (now) => {
@@ -1502,7 +1502,9 @@ function driveTo(idx, closeFirst) {
   car.raf = requestAnimationFrame(loop);
 }
 
-/* a wrecked car burns off in the fireball, then a replacement arrives */
+/* a wrecked car burns off in the fireball. the replacement doesn't just
+   appear — it drives in from the west edge like any other delivery,
+   and the keys are handed back once it's on the block */
 function crashCar() {
   if (car.wrecked) return;
   car.wrecked = true;
@@ -1511,10 +1513,16 @@ function crashCar() {
   car.el.classList.add("wrecked");
   setTimeout(() => {
     car.el.classList.remove("wrecked");
-    car.wrecked = false;
+    car.x = cam.x - 90;             // off-frame, west of wherever we're looking
+    car.dir = 1; car.vDir = 1; car.lean = 0;
     placeCar();
-    toast("a replacement delivery car has arrived.", "the street", "car");
-  }, 5200);
+    const mid = cam.x + VB_W / 2;
+    driveTo(nearestStopIdx(mid), false);
+    setTimeout(() => {
+      car.wrecked = false;
+      toast("a replacement delivery car has arrived.", "the street", "car");
+    }, 3400);
+  }, 4500);
 }
 
 function driveCar(step) {
@@ -1548,7 +1556,7 @@ car.el.addEventListener("pointerdown", () => {
   carHoldT = setTimeout(function cruise() {
     carWasHeld = true;
     nudgeCar();
-    carHoldT = setTimeout(cruise, 520);
+    carHoldT = setTimeout(cruise, 680);
   }, 320);
 });
 ["pointerup", "pointercancel", "pointerleave"].forEach((ev) =>
@@ -1574,6 +1582,7 @@ function nearestStopIdx(x) {
 
 function chaseLoop() {
   chaseRaf = 0;
+  if (car.wrecked) return;
   const rect = skylineEl.querySelector("svg").getBoundingClientRect();
   if (!rect.width) return;
   let target = Math.max(60, Math.min(SCENE_W - 150,
@@ -1589,7 +1598,7 @@ function chaseLoop() {
     }
     return;   // parked under the cursor; the next mousemove wakes it
   }
-  const step = prefersReduced() ? d : Math.max(-8.5, Math.min(8.5, d * 0.06));
+  const step = prefersReduced() ? d : Math.max(-6, Math.min(6, d * 0.045));
   if (Math.abs(d) > 3) car.dir = d > 0 ? 1 : -1;
   car.x += step;
   if (car.x > SCENE_W) {   // across the bridge — the street loops west
