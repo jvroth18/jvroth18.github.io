@@ -135,8 +135,11 @@ kbd {
 .roof-deco .wire { stroke: var(--sky-ink); stroke-width: 1.6; fill: none; }
 .deco { pointer-events: none; }
 .bridge line, .bridge path { stroke: var(--sky-ink); stroke-width: 3; fill: none; stroke-linecap: round; }
-.bridge .tower { stroke-width: 7; }
-.bridge .cable { stroke-width: 4; }
+.bridge .tower { stroke-width: 9; }
+.bridge .strut { stroke-width: 5; }
+.bridge .cable { stroke-width: 5; }
+.bridge .susp { stroke-width: 1.8; }
+.bridge .truss { stroke-width: 2; }
 .bridge .deck-rail { stroke-width: 2.4; }
 .bridge rect { fill: var(--sky-ink); }
 .fg .river rect { fill: var(--sky-ink); opacity: .55; }

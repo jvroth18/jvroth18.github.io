@@ -98,7 +98,7 @@ const POSTS = [
 ];
 
 /* YTD GitHub contributions — refresh with: python3 update-activity.py */
-const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,85]}; // ACTIVITY-DATA
+const ACTIVITY = {"login":"jvroth18","start":"2026-01-01","updated":"2026-08-19","counts":[0,16,6,0,11,5,3,10,7,13,33,29,24,12,4,8,7,3,8,11,23,10,9,5,5,27,30,18,23,3,10,11,1,1,4,18,4,16,17,9,13,31,6,3,1,37,13,45,52,43,37,18,35,8,29,17,37,23,14,28,57,60,25,25,43,21,45,13,56,122,36,6,21,23,36,36,35,17,6,0,43,17,39,22,25,4,1,67,17,8,19,36,21,29,44,58,107,59,43,11,1,0,3,2,7,5,19,12,13,41,93,15,7,35,13,81,49,13,22,6,2,34,29,48,25,2,12,1,19,26,0,45,4,34,0,27,30,14,88,22,5,1,0,11,95,63,4,10,9,182,0,54,42,39,5,47,5,0,7,58,50,21,6,0,42,71,66,64,40,59,1,0,57,95,81,37,8,10,40,46,16,21,29,25,13,6,14,18,12,33,30,0,4,39,63,10,11,11,49,69,78,34,19,4,0,4,0,0,1,0,0,3,3,7,5,1,0,51,8,2,19,5,12,61,52,98,3,105,104,56,88]}; // ACTIVITY-DATA
 
 /* the biplane's rotation of headlines; billboard clicks jump the queue */
 const BANNER_ROTATION = [
@@ -476,22 +476,26 @@ function groundScreenY() {
   return r.top + (354 / 460) * r.height;
 }
 
+const CRASH_FIRE = ["#ffd23c", "#ffb03c", "#ff8a2e", "#ff6a2a", "#e2542c"];
+
 function crashFlight() {
   const f = flight;
   f.crashed = true; f.crashT = 0; f.bannerBox = null;
-  const accent = cssVar("--accent") || "#c14a2e";
-  for (let i = 0; i < 30; i++) {
-    const a = Math.random() * Math.PI * 2, v = 1.5 + Math.random() * 4;
+  f.crashX = f.x; f.crashY = Math.min(f.y, groundScreenY() - 6);
+  f.particles = [];
+  for (let i = 0; i < 64; i++) {
+    const a = Math.random() * Math.PI * 2, v = 1 + Math.random() * 5.5;
     f.particles.push({
-      x: f.x + (Math.random() - 0.5) * 10, y: f.y + (Math.random() - 0.5) * 6,
-      vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.6,
-      life: 0.9 + Math.random() * 0.5, r: 1.5 + Math.random() * 3.5,
-      color: Math.random() < 0.45 ? accent : null,
+      kind: "fire",
+      x: f.crashX + (Math.random() - 0.5) * 12, y: f.crashY + (Math.random() - 0.5) * 8,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.4,
+      life: 0.6 + Math.random() * 0.6, r: 2 + Math.random() * 4,
+      color: CRASH_FIRE[Math.floor(Math.random() * CRASH_FIRE.length)],
     });
   }
   hud.textContent = "✈  DOWN — the street claims another aircraft";
-  toast("the delivery plane is down on the street. a replacement is being gassed up.", "flight deck", "flight");
-  if (typeof scatterBirdsNear === "function") scatterBirdsNear(f.x);
+  toast("the delivery plane is down and burning on the street. a replacement is being gassed up.", "flight deck", "flight");
+  if (typeof scatterBirdsNear === "function") scatterBirdsNear(f.crashX);
 }
 
 function stepFlight() {
@@ -499,13 +503,28 @@ function stepFlight() {
   f.t++;
 
   if (f.crashed) {
-    // the wreck: debris settles, then the sky clears for the next plane
+    // the wreck burns: fire falls and gutters, smoke feeds off it and rises
+    f.trail.forEach((t) => (t.a *= 0.88));
+    const g = groundScreenY();
+    if (f.crashT < 90 && f.crashT % 3 === 0) {
+      f.particles.push({
+        kind: "smoke",
+        x: f.crashX + (Math.random() - 0.5) * 18, y: g - 8 - Math.random() * 10,
+        vx: (Math.random() - 0.5) * 0.4, vy: -0.7 - Math.random() * 0.6,
+        life: 0.55 + Math.random() * 0.35, r: 3 + Math.random() * 4,
+      });
+    }
     f.particles.forEach((p) => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.vx *= 0.97;
-      p.life -= 0.016; p.r += 0.1;
+      p.x += p.vx; p.y += p.vy;
+      if (p.kind === "fire") {
+        p.vy += 0.07; p.vx *= 0.96; p.life -= 0.02; p.r *= 0.985;
+        if (p.y > g - 2) { p.y = g - 2; p.vy *= -0.35; p.vx *= 0.7; }
+      } else {
+        p.vy -= 0.012; p.vx *= 0.99; p.life -= 0.007; p.r += 0.22;
+      }
     });
     f.particles = f.particles.filter((p) => p.life > 0);
-    if (++f.crashT > 110) { f.crashed = false; stopFlight(true); }
+    if (++f.crashT > 200) { f.crashed = false; stopFlight(true); }
     return;
   }
 
@@ -635,16 +654,62 @@ function drawFlight() {
   }
   ctx.globalAlpha = 1;
 
+  if (f.crashed) { drawCrash(f); return; }
+
   f.particles.forEach((p) => {
-    ctx.fillStyle = p.color || faint;
-    ctx.globalAlpha = p.life * (p.color ? 0.8 : 0.45);
+    ctx.fillStyle = faint;
+    ctx.globalAlpha = p.life * 0.45;
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
   });
   ctx.globalAlpha = 1;
 
-  if (f.crashed) return;   // nothing left to draw but the debris
   drawBannerRope(f);
   drawBiplane(f, accent);
+}
+
+/* the crash site: a blooming flash, flames licking at the wreck,
+   glowing debris, and a column of smoke */
+function drawCrash(f) {
+  const g = groundScreenY();
+  if (f.crashT < 10) {
+    const r = 16 + f.crashT * 17, a = 1 - f.crashT / 10;
+    const flash = ctx.createRadialGradient(f.crashX, f.crashY, 0, f.crashX, f.crashY, r);
+    flash.addColorStop(0, `rgba(255,240,190,${a})`);
+    flash.addColorStop(0.5, `rgba(255,150,60,${a * 0.8})`);
+    flash.addColorStop(1, "rgba(255,90,40,0)");
+    ctx.fillStyle = flash;
+    ctx.beginPath(); ctx.arc(f.crashX, f.crashY, r, 0, Math.PI * 2); ctx.fill();
+  }
+  if (f.crashT < 120) {
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    const dying = Math.min(1, (120 - f.crashT) / 34);
+    for (let i = 0; i < 5; i++) {
+      const fx = f.crashX + (i - 2) * 7 + Math.sin(f.crashT * 0.4 + i * 2.1) * 3;
+      const h = (15 + Math.sin(f.crashT * 0.55 + i * 1.7) * 6) * dying;
+      if (h < 2) continue;
+      const lick = ctx.createLinearGradient(fx, g, fx, g - h * 2);
+      lick.addColorStop(0, "rgba(255,120,40,.85)");
+      lick.addColorStop(0.6, "rgba(255,190,60,.55)");
+      lick.addColorStop(1, "rgba(255,230,150,0)");
+      ctx.fillStyle = lick;
+      ctx.beginPath(); ctx.ellipse(fx, g - h / 2, 4.5, h, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  f.particles.forEach((p) => {
+    if (p.kind === "fire") {
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.min(1, p.life * 1.4);
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#57504a";
+      ctx.globalAlpha = p.life * 0.5;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+  ctx.globalAlpha = 1;
 }
 
 function drawBannerRope(f) {
@@ -1247,8 +1312,8 @@ const CAR_STOPS = [
   { open: "project-5", x: 1785 },
 ];
 const VB_W = 1660;     // the skyline viewBox (camera frame) width
-const SCENE_W = 2560;  // the street runs east over the river, across the bridge
-const CAM_EDGE = 2380; // the camera never shows the bridge's far end — the
+const SCENE_W = 2960;  // the street runs east over the river, across the bridge
+const CAM_EDGE = 2700; // the camera never shows the bridge's far end — the
                        // wrap back to the west side happens off-frame
 
 /* ---- the camera: the frame follows the car down the block, the
@@ -1440,7 +1505,7 @@ function chaseLoop() {
     ((chaseClientX - rect.left) / rect.width) * VB_W + cam.x));
   // once the car is well onto the bridge and still being pushed east,
   // it commits to the crossing — over the river and around to the west
-  if (car.x > 2300 && target > 2280) target = SCENE_W + 70;
+  if (car.x > 2450 && target > 2430) target = SCENE_W + 70;
   const d = target - car.x;
   if (Math.abs(d) < 0.6) {
     if (car.driving) {
@@ -1527,29 +1592,66 @@ function makeBird(i) {
   return b;
 }
 
+/* a flight is a wander, not a commute: a few airborne waypoints picked
+   at random, steered through with momentum and jitter, ending on a
+   perch — no two flights alike */
+const randIn = (a, c) => a + Math.random() * (c - a);
+const activeBirds = new Set();
+let birdRaf = 0;
+
+function planFlight(b, to) {
+  const pts = [];
+  const hops = 1 + Math.floor(Math.random() * 3);
+  let x = b.x;
+  for (let i = 0; i < hops; i++) {
+    x = Math.max(90, Math.min(SCENE_W - 240, x + randIn(-520, 520)));
+    pts.push({ x, y: randIn(110, 300) });
+  }
+  pts.push({ x: to.x, y: to.y });
+  return pts;
+}
+
 function flyBird(b, to) {
   if (b.flying || !to) return;
   if (b.perch) b.perch.taken = null;
   b.perch = to; to.taken = b;
+  if (prefersReduced()) {
+    b.x = to.x; b.y = to.y; placeBird(b, to.x >= b.x ? 1 : -1);
+    return;
+  }
   b.flying = true; b.el.classList.add("flying");
-  const from = { x: b.x, y: b.y };
-  const dist = Math.hypot(to.x - from.x, to.y - from.y);
-  const dur = prefersReduced() ? 1 : Math.max(40, Math.min(150, dist / 3.2));
-  const lift = Math.min(90, 30 + dist * 0.18);
-  const dir = to.x >= from.x ? 1 : -1;
-  let t = 0;
-  const step = () => {
-    t++;
-    const u = Math.min(1, t / dur), v = 1 - u;
-    b.x = v * v * from.x + 2 * v * u * ((from.x + to.x) / 2) + u * u * to.x;
-    b.y = v * v * from.y + 2 * v * u * (Math.min(from.y, to.y) - lift) + u * u * to.y;
-    placeBird(b, dir);
-    if (u < 1) { b.raf = requestAnimationFrame(step); return; }
-    b.flying = false; b.el.classList.remove("flying");
-    b.x = to.x; b.y = to.y; placeBird(b, dir);
-  };
-  cancelAnimationFrame(b.raf);
-  b.raf = requestAnimationFrame(step);
+  b.path = planFlight(b, to);
+  b.wp = 0;
+  b.speed = randIn(2.1, 3.6);
+  b.vx = b.vx || 0; b.vy = b.vy || 0;
+  activeBirds.add(b);
+  if (!birdRaf) birdRaf = requestAnimationFrame(birdStep);
+}
+
+function birdStep() {
+  birdRaf = 0;
+  activeBirds.forEach((b) => {
+    const t = b.path[b.wp];
+    const last = b.wp === b.path.length - 1;
+    const dx = t.x - b.x, dy = t.y - b.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const sp = last && dist < 60 ? b.speed * Math.max(0.35, dist / 60) : b.speed;
+    b.vx += ((dx / dist) * sp - b.vx) * 0.06;
+    b.vy += ((dy / dist) * sp - b.vy) * 0.06;
+    // the wander: a constant small waver, and the odd whim
+    b.vy += Math.sin((b.x + b.y) * 0.05) * 0.05;
+    if (Math.random() < 0.02) { b.vx += randIn(-0.9, 0.9); b.vy += randIn(-0.7, 0.7); }
+    b.x += b.vx; b.y += b.vy;
+    placeBird(b, b.vx < -0.15 ? -1 : 1);
+    if (dist < (last ? 4 : 18)) {
+      if (!last) { b.wp++; return; }
+      b.flying = false; b.el.classList.remove("flying");
+      b.x = t.x; b.y = t.y; b.vx = 0; b.vy = 0;
+      placeBird(b, Math.random() < 0.5 ? -1 : 1);
+      activeBirds.delete(b);
+    }
+  });
+  if (activeBirds.size) birdRaf = requestAnimationFrame(birdStep);
 }
 
 function startleBirds(x, radius) {
@@ -1568,14 +1670,17 @@ function scatterBirdsNear(screenX) {
 
 for (let i = 0; i < 6; i++) birds.push(makeBird(i));
 
-/* ambient life: now and then one moves along — except after dark */
-setInterval(() => {
-  if (document.hidden || prefersReduced() || root.dataset.edition === "night") return;
-  if (Math.random() < 0.4) {
-    const b = birds[Math.floor(Math.random() * birds.length)];
-    if (!b.flying) flyBird(b, freePerch(b.x));
-  }
-}, 5000);
+/* each bird keeps its own clock — takeoffs come when they come.
+   after dark the flock mostly roosts. */
+function scheduleBird(b) {
+  clearTimeout(b.timer);
+  const night = root.dataset.edition === "night";
+  b.timer = setTimeout(() => {
+    if (!document.hidden && !prefersReduced() && !b.flying) flyBird(b, freePerch(b.x));
+    scheduleBird(b);
+  }, night ? randIn(24000, 60000) : randIn(3000, 13000));
+}
+birds.forEach(scheduleBird);
 
 /* the car flushes whatever it drives under */
 setInterval(() => {
