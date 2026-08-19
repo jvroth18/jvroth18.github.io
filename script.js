@@ -71,6 +71,17 @@ const PROJECTS = [
       ["face", "windows-95 desktop, faithfully"],
     ],
   },
+  {
+    dates: "OPEN SOURCE", title: "agent-footprint", role: "Creator",
+    desc: "A zero-dependency CLI that shows what AI coding agents are doing to your machine — the git worktrees they forgot, per-session scratch dirs, multi-gigabyte model caches, and processes that never exited — rendered as a self-contained local dashboard, with a deliberately conservative cleaner for the safe leftovers. Its first scan of my own Mac found 73 GB.",
+    link: "https://github.com/jvroth18/agent-footprint",
+    banner: "HOT OFF THE PRESS — AGENT-FOOTPRINT",
+    spec: [
+      ["finds", "orphaned worktrees · caches · scratch"],
+      ["field test", "73 GB · 202 worktrees on my own mac"],
+      ["install", "github.com/jvroth18/agent-footprint"],
+    ],
+  },
 ];
 
 /* Long-form dispatches. `url` is the canonical LinkedIn post, or a
@@ -99,6 +110,7 @@ const BANNER_ROTATION = [
     : []),
   { text: "NOW SHIPPING — RELAY", open: "project-0" },
   { text: "NEW ON THE BLOCK — AX", open: "project-4" },
+  { text: "HOT OFF THE PRESS — AGENT-FOOTPRINT", open: "project-5" },
   { text: "READ THE DISPATCHES", open: "writing" },
   { text: "WRITE ME — JORDAN@GETTALKY.AI", open: "contact" },
 ];
